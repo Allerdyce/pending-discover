@@ -4224,7 +4224,8 @@
           "Activity image";
         const slides = [];
         if (hasGlowKickballVideo(activity)) {
-          slides.push(buildVideoSlide("utMEhvPfU-k"));
+          // Use landscape-native video to avoid portrait crop issues
+          slides.push(buildVideoSlide("odRYB9EFDwU"));
         }
         slides.push(buildImageSlide(activity.image_url || activity.img, alt));
         // Always include a second slide so hover can reveal it
@@ -4853,7 +4854,8 @@
           "Activity image";
         const slides3 = [];
         if (hasGlowKickballVideo(activity))
-          slides3.push(buildVideoSlide("utMEhvPfU-k"));
+          // Use landscape-native video to avoid portrait crop issues
+          slides3.push(buildVideoSlide("odRYB9EFDwU"));
         slides3.push(
           buildImageSlide(activity.image_url || activity.img, alt3)
         );
@@ -7576,7 +7578,8 @@
         a.image_alt || a.program_name || a.venue_name || "Activity image";
       const slidesMap = [];
       if (hasGlowKickballVideo(a)) {
-        slidesMap.push(buildVideoSlide("utMEhvPfU-k"));
+        // Use landscape-native video to avoid portrait crop issues
+        slidesMap.push(buildVideoSlide("odRYB9EFDwU"));
       } else {
         slidesMap.push(buildImageSlide(a.image_url, altMap));
       }
