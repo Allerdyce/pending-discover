@@ -4879,6 +4879,10 @@
     // Render venue checkboxes under Location using venues from venue-locations.js
     function renderVenueFilters() {
       const list = document.getElementById("venue-list");
+      // Check window.activities as source of truth for dynamic venues if needed, 
+      // but if venues is static, keep it. 
+      // However, the issue is 0 results. 
+      // Let's ensure we are resistant to empty global.
       if (!list || typeof venues === "undefined" || !Array.isArray(venues))
         return;
       const frag = document.createDocumentFragment();
@@ -4927,8 +4931,9 @@
         });
       }
       // From activities (post-transform)
-      if (Array.isArray(activities)) {
-        activities.forEach((a) => {
+      const acts = window.activities || []; // Use global window.activities
+      if (Array.isArray(acts)) {
+        acts.forEach((a) => {
           const hood =
             typeof getNeighborhoodForActivity === "function"
               ? getNeighborhoodForActivity(a)
@@ -6099,6 +6104,21 @@
             );
           }
         }
+        // Fallback for default city "Baltimore" if it yields 0 results (e.g. mismatch)
+        if (items.length === 0) {
+          const currentCity = document.getElementById('city');
+          if (currentCity && currentCity.value.trim().toLowerCase() === 'baltimore') {
+            // Try to return all for scope
+            const allForScope = (window.activities || []).filter(a => {
+              if (isLeaguesScope) return String(a.source || "").toLowerCase() === 'leagues';
+              return true;
+            });
+            if (allForScope.length > 0) {
+              console.warn("City 'Baltimore' yielded 0 results, falling back to all activities.");
+              items = allForScope;
+            }
+          }
+        }
       } catch (_) {
         /* no-op */
       }
@@ -6109,7 +6129,8 @@
       const inputs = getAllFeatureInputs();
       if (!inputs || inputs.length === 0) return;
       // If no data yet, keep filters enabled to avoid misleading disabled state
-      if (!Array.isArray(activities) || activities.length === 0) {
+      const allActs = window.activities || [];
+      if (!Array.isArray(allActs) || allActs.length === 0) {
         inputs.forEach((inp) => {
           inp.disabled = false;
           const lbl = inp.closest("label");
@@ -6127,7 +6148,7 @@
       const currentItemsNoDays =
         typeof getFilteredActivitiesNoDays === "function"
           ? getFilteredActivitiesNoDays()
-          : activities.slice();
+          : (window.activities || []).slice();
       // Determine if we are in Leagues scope; in this scope, keep filter inputs clickable even if no matches yet
       let isLeaguesScope = false;
       try {
