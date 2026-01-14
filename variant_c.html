@@ -994,9 +994,9 @@
           <!-- HERO SECTION (Grafted from Variant B) -->
           <section id="hero-variant-b" class="mb-6">
             <!-- Level 1: Macro Tabs -->
-            <div class="flex items-center gap-6 border-b border-gray-200 w-full mb-4 relative z-50">
+            <div class="flex justify-center items-center gap-12 py-6 border-b border-slate-100 bg-white relative z-50">
               <button id="tab-sports"
-                class="flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-bold text-gray-900">
+                class="flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-semibold text-gray-900">
                 <img src="sports.png" class="h-8 w-8 object-contain">
                 <span>Sports</span>
               </button>
@@ -1015,6 +1015,51 @@
                 <img src="volunteer.png" class="h-8 w-8 object-contain">
                 <span>Volunteer</span>
               </button>
+            </div>
+
+            <!-- Daily Banner + Subfilters (Variant B parity; hidden by default, shown only in Daily Sports scope) -->
+            <div id="daily-banner-b" class="hidden mt-6 mb-4 flex flex-col md:flex-row gap-4 h-auto md:h-[150px]">
+              <div class="w-full md:w-1/3 rounded-2xl overflow-hidden relative bg-gray-100">
+                <img src="./public/images/daily-image.png" class="w-full h-full object-cover" alt="Flexible Fun Play Daily">
+              </div>
+              <div class="w-full md:w-2/3 bg-[#1539EB] text-white rounded-2xl px-6 py-4 flex flex-col justify-center">
+                <div class="flex flex-col md:flex-row gap-6 items-center md:items-start h-full">
+                  <div class="flex-1 space-y-2">
+                    <img src="./public/images/daily-play.svg" class="h-6 mb-1" alt="Daily Play">
+                    <p class="text-sm text-blue-100 font-medium">Flexible, one-off games on your schedule:</p>
+                    <div class="text-sm space-y-1">
+                      <p><strong class="text-[#C7FF10] font-black">DROP-INS:</strong> <span class="text-blue-50">Drop-in as a sub in a league</span></p>
+                      <p><strong class="text-[#C7FF10] font-black">PICKUPS:</strong> <span class="text-blue-50">Just show up and play</span></p>
+                    </div>
+                  </div>
+                  <div class="flex-1 space-y-2 text-sm font-semibold self-center">
+                    <div class="flex items-center gap-2">
+                      <svg class="w-5 h-5 text-[#C7FF10] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      <span>Flexible, low-commitment play</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <svg class="w-5 h-5 text-[#C7FF10] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      <span>Great way to try new sports</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <svg class="w-5 h-5 text-[#C7FF10] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      <span>We handle teams and gear</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="daily-subfilters-b" class="hidden flex items-center justify-between w-full border border-gray-300 rounded-full mt-4 p-1">
+              <button class="w-1/3 py-1.5 rounded-full border-2 border-black bg-white text-black text-sm font-bold shadow-sm" data-target="daily-all">All Daily</button>
+              <button class="w-1/3 py-1.5 rounded-full border-2 border-transparent text-black text-sm font-bold hover:text-gray-600 transition" data-target="daily-dropin">Drop-Ins</button>
+              <button class="w-1/3 py-1.5 rounded-full border-2 border-transparent text-black text-sm font-bold hover:text-gray-600 transition" data-target="daily-pickup">Pickups</button>
             </div>
 
             <!-- Level 2: Sub Nav -->
@@ -6598,6 +6643,13 @@
       const iconEl = document.getElementById("scope-explainer-icon");
       const dailyTypeWrap = document.getElementById("daily-type-container");
       let filtersChanged = false;
+
+      // Variant B parity: show the Daily Play banner + segmented buttons only in Daily scope
+      const dailyBannerB = document.getElementById("daily-banner-b");
+      const dailySubfiltersB = document.getElementById("daily-subfilters-b");
+      if (dailyBannerB) dailyBannerB.classList.toggle("hidden", !daily);
+      if (dailySubfiltersB) dailySubfiltersB.classList.toggle("hidden", !daily);
+
       if (titleEl && bodyEl && iconEl && dailyTypeWrap) {
         if (daily) {
           titleEl.textContent = "Daily Sports";
@@ -11975,11 +12027,16 @@
         console.log(`Bridge: Clicked ${tabDef.id}, mapping to value: ${tabDef.value}`);
 
         // Visuals: Active State (Simple bottom border)
+        // Ensure only the active macro tab has the underline/bold styling.
         macroTabs.forEach(t => {
           const b = document.getElementById(t.id);
-          if (b) b.classList.remove("border-b-4", "border-[#0034DD]", "font-bold");
+          if (!b) return;
+          b.classList.remove("border-b-4", "border-[#0034DD]", "font-bold");
+          // Keep the baseline style consistent
+          b.classList.remove("border-b-2", "border-blue-600");
         });
         e.currentTarget.classList.add("border-b-4", "border-[#0034DD]", "font-bold");
+        e.currentTarget.classList.remove("border-b-2", "border-blue-600");
 
         // Logic: Update Hidden Input
         if (hiddenActivityInput) {
@@ -12004,10 +12061,66 @@
 
     // Set "Sports" as visually active by default (handled in HTML now, but keeping for safety)
     const defaultTab = document.getElementById("tab-sports");
-    if (defaultTab) defaultTab.classList.add("border-b-4", "border-[#0034DD]", "font-bold");
+    if (defaultTab) {
+      defaultTab.classList.add("border-b-4", "border-[#0034DD]", "font-bold");
+      defaultTab.classList.remove("border-b-2", "border-blue-600");
+    }
+
+    // Ensure non-active tabs don't accidentally keep an underline from HTML/CSS defaults
+    macroTabs
+      .filter((t) => t.id !== 'tab-sports')
+      .forEach((t) => {
+        const b = document.getElementById(t.id);
+        if (!b) return;
+        b.classList.remove('border-b-4', 'border-[#0034DD]', 'font-bold');
+        b.classList.remove('border-b-2', 'border-blue-600');
+      });
 
     // Ensure Sports sub-nav is visible on initial load
     setSportsSubnavVisible(true);
+
+    // Daily UI buttons (Variant B segmented control) -> sync to existing daily-type radios
+    (function initDailySubfiltersB() {
+      const wrap = document.getElementById('daily-subfilters-b');
+      if (!wrap) return;
+
+      const setActive = (target) => {
+        const btns = Array.from(wrap.querySelectorAll('button[data-target]'));
+        btns.forEach((b) => {
+          const isOn = b.dataset.target === target;
+          b.classList.toggle('border-black', isOn);
+          b.classList.toggle('bg-white', isOn);
+          b.classList.toggle('shadow-sm', isOn);
+          if (!isOn) {
+            b.classList.add('border-transparent');
+            b.classList.remove('border-black');
+          } else {
+            b.classList.remove('border-transparent');
+          }
+        });
+      };
+
+      wrap.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('button[data-target]') : null;
+        if (!btn) return;
+        const target = btn.dataset.target;
+        const radioId = target === 'daily-all' ? 'daily-all' : target === 'daily-dropin' ? 'daily-dropin' : target === 'daily-pickup' ? 'daily-pickup' : null;
+        if (!radioId) return;
+        const r = document.getElementById(radioId);
+        if (r) {
+          r.checked = true;
+          r.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        setActive(target);
+      });
+
+      // Initialize button state from current radios
+      const initChecked = document.querySelector('input[type="radio"][name="daily-type"]:checked');
+      const initTarget = initChecked
+        ? (initChecked.id === 'daily-dropin' ? 'daily-dropin' : initChecked.id === 'daily-pickup' ? 'daily-pickup' : 'daily-all')
+        : 'daily-all';
+      setActive(initTarget);
+    })();
 
     // 5. Wire Dropdown Pills (Sports, Days, Neighborhood)
     const pillDropdownMap = {
