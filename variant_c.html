@@ -1118,10 +1118,17 @@
                 padding-bottom: 0.5rem; /* match the previous pb-2 so height stays constant */
               }
 
-              /* On desktop: hide Filters pill (sidebar is already visible) */
-              @media (min-width: 1024px) {
+              /* On tablet+ widths: hide Filters pill (sidebar is already visible) */
+              @media (min-width: 768px) {
                 #hero-variant-b #pill-filters {
                   display: none !important;
+                }
+              }
+
+              /* Tablet+ widths: keep the pill row tight and predictable */
+              @media (min-width: 768px) {
+                #hero-variant-b .hero-filters-row {
+                  column-gap: 16px;
                 }
               }
             </style>
@@ -1247,7 +1254,7 @@
                 </div>
               </div>
 
-              <div class="hero-divider hidden sm:block"></div>
+              <div class="hero-divider hidden"></div>
 
               <!-- City Selector -->
               <div class="hero-city flex items-center gap-1 font-bold text-lg text-[#222]">
