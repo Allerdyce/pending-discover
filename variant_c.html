@@ -6568,6 +6568,10 @@
           iconEl.classList.add("text-orange-600");
           dailyTypeWrap.classList.remove("hidden");
           dailyTypeWrap.setAttribute("aria-hidden", "false");
+          // Show the Daily Sports segmented control (All Daily / Drop-ins / Pickups)
+          // NOTE: This is the Variant B/C replacement for Variant A's left sidebar Daily filter.
+          const dailySeg = document.getElementById("daily-type-segment");
+          if (dailySeg) dailySeg.classList.remove("hidden");
           // Ensure a default selection
           const anyChecked = document.querySelector(
             'input[type="radio"][name="daily-type"]:checked'
@@ -6620,9 +6624,17 @@
           // Golden trophy for tournaments
           iconEl.classList.remove("text-orange-600", "text-[rgb(34,34,34)]");
           iconEl.classList.add("text-yellow-600");
-          // Hide daily-type radios
+          // Hide daily-type controls when not in Daily scope
           dailyTypeWrap.classList.add("hidden");
           dailyTypeWrap.setAttribute("aria-hidden", "true");
+          const dailySeg = document.getElementById("daily-type-segment");
+          if (dailySeg) dailySeg.classList.add("hidden");
+          // Reset radios so they can't accidentally affect other scopes
+          document
+            .querySelectorAll('input[type="radio"][name="daily-type"]')
+            .forEach((r) => {
+              r.checked = false;
+            });
           // Toggle Schedule sub-blocks: non-Daily -> keep Start Month hidden, hide quick dates
           const startMonthBlock =
             document.getElementById("start-month-block");
@@ -6667,9 +6679,16 @@
             "text-[rgb(34,34,34)]"
           );
           iconEl.classList.add("text-purple-600");
-          // Hide daily-type radios
+          // Hide daily-type controls
           dailyTypeWrap.classList.add("hidden");
           dailyTypeWrap.setAttribute("aria-hidden", "true");
+          const dailySeg = document.getElementById("daily-type-segment");
+          if (dailySeg) dailySeg.classList.add("hidden");
+          document
+            .querySelectorAll('input[type="radio"][name="daily-type"]')
+            .forEach((r) => {
+              r.checked = false;
+            });
           // Toggle Schedule sub-blocks for non-Daily (keep Start Month hidden)
           const startMonthBlock =
             document.getElementById("start-month-block");
