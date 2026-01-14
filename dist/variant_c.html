@@ -272,7 +272,7 @@
       /* keep square-ish look */
     }
   </style>
-  <script type="module" crossorigin src="/assets/variant_c-Cbh4r6qF.js"></script>
+  <script type="module" crossorigin src="/assets/variant_c-CI8SrEsw.js"></script>
 </head>
 
 <body>
@@ -1127,7 +1127,7 @@
             <!-- Original inputs required by A's logic -->
             <section id="search-bar-section" class="mb-6">
               <!-- Keep IDs intact so getElementById works -->
-              <input type="text" id="city" value="Baltimore" />
+              <input type="text" id="city" value="Towson" />
               <input type="text" id="activities" /> <!-- Driven by Sub Nav -->
               <input type="text" id="sports" /> <!-- Driven by Sports Pill -->
               <button id="desktop-search-btn"></button>
@@ -1635,11 +1635,14 @@
         const rawScope = e.currentTarget.dataset.scope;
         let targetValue = "";
 
-        // Map B-scope to A-value
-        if (rawScope === "Private Rentals") targetValue = "Private Rentals"; // Matches JSON
+        // Map Variant B/C scopes to the exact values used by Variant A/C filtering logic.
+        // IMPORTANT: The dataset uses singular activity_type values like "League" and "Tournament".
+        // The scope selector (#activities) expects pluralized labels ("Leagues", "Tournaments", etc.).
+        if (rawScope === "Private Rentals") targetValue = "Private Rentals";
         else if (rawScope === "leagues") targetValue = "Leagues";
         else if (rawScope === "daily") targetValue = "Daily Sports";
         else if (rawScope === "tournaments") targetValue = "Tournaments";
+        else if (rawScope === "events") targetValue = "Events";
         else targetValue = rawScope;
 
         console.log(`Bridge: Switching scope to '${targetValue}'`);
@@ -1649,14 +1652,22 @@
           // Dispatch standard input event so A's logic picks it up
           hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
           hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true })); // Just in case
+
+          // Some code paths only rerender on explicit apply; call render as a safety net.
+          if (typeof applyFiltersAndRerender === 'function') applyFiltersAndRerender();
+          else if (typeof renderActivities === 'function') renderActivities();
+          if (typeof updateResultsHeading === 'function') updateResultsHeading();
         }
       });
     });
 
     // 3. Initial State: Default to "Leagues"
+    // Ensure we trigger filtering after setting the value (otherwise page can render empty until interaction).
     if (hiddenActivityInput && !hiddenActivityInput.value) {
       console.log("Bridge: Setting initial default to 'Leagues'");
       hiddenActivityInput.value = "Leagues";
+      hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
+      hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     // 4. Wire Macro Tabs (Sports, Events, Fitness, Volunteer)
@@ -1919,7 +1930,20 @@
 
     // START DATA LOADING
     loadAllData().then((data) => {
-      window.activities = data || [];
+      // Robust assignment: only overwrite if we got data, or if we really have nothing.
+      // If data is empty but we have DATASETS, try to reconstruct.
+      console.log("loadAllData returned:", data ? data.length : "null/undefined");
+
+      if (Array.isArray(data) && data.length > 0) {
+        window.activities = data;
+      } else if (window.activities && window.activities.length > 0) {
+        console.log("Keeping existing window.activities (" + window.activities.length + " items)");
+      } else {
+        window.activities = data || [];
+      }
+
+      console.log("Final window.activities size for render:", window.activities.length);
+
       renderActivities();
       if (typeof updateResultsHeading === "function") updateResultsHeading();
       if (typeof window.refreshNeighborhoodDropdown === "function") window.refreshNeighborhoodDropdown();

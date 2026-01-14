@@ -11544,11 +11544,14 @@
         const rawScope = e.currentTarget.dataset.scope;
         let targetValue = "";
 
-        // Map B-scope to A-value
-        if (rawScope === "Private Rentals") targetValue = "Private Rentals"; // Matches JSON
+        // Map Variant B/C scopes to the exact values used by Variant A/C filtering logic.
+        // IMPORTANT: The dataset uses singular activity_type values like "League" and "Tournament".
+        // The scope selector (#activities) expects pluralized labels ("Leagues", "Tournaments", etc.).
+        if (rawScope === "Private Rentals") targetValue = "Private Rentals";
         else if (rawScope === "leagues") targetValue = "Leagues";
         else if (rawScope === "daily") targetValue = "Daily Sports";
         else if (rawScope === "tournaments") targetValue = "Tournaments";
+        else if (rawScope === "events") targetValue = "Events";
         else targetValue = rawScope;
 
         console.log(`Bridge: Switching scope to '${targetValue}'`);
@@ -11558,14 +11561,22 @@
           // Dispatch standard input event so A's logic picks it up
           hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
           hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true })); // Just in case
+
+          // Some code paths only rerender on explicit apply; call render as a safety net.
+          if (typeof applyFiltersAndRerender === 'function') applyFiltersAndRerender();
+          else if (typeof renderActivities === 'function') renderActivities();
+          if (typeof updateResultsHeading === 'function') updateResultsHeading();
         }
       });
     });
 
     // 3. Initial State: Default to "Leagues"
+    // Ensure we trigger filtering after setting the value (otherwise page can render empty until interaction).
     if (hiddenActivityInput && !hiddenActivityInput.value) {
       console.log("Bridge: Setting initial default to 'Leagues'");
       hiddenActivityInput.value = "Leagues";
+      hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
+      hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     // 4. Wire Macro Tabs (Sports, Events, Fitness, Volunteer)
