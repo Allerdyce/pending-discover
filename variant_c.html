@@ -5667,7 +5667,19 @@
       // In Events scope, ignore Sports filter (events often don't have a sport)
       if (!eventsScope && selectedSports.length > 0) {
         const set = new Set(selectedSports.map(normalizeSportLabel));
-        items = items.filter((a) => set.has(normalizeSportLabel(a.sport)));
+        items = items.filter((a) => {
+          // Support multiple source schemas: some datasets use `sport`, others use `sports` (array)
+          // or `sport_name`.
+          const candidates = [];
+          if (a && a.sport) candidates.push(a.sport);
+          if (a && a.sport_name) candidates.push(a.sport_name);
+          if (a && a.sportName) candidates.push(a.sportName);
+          if (a && Array.isArray(a.sports)) candidates.push(...a.sports);
+          if (a && typeof a.sports === 'string') candidates.push(a.sports);
+          return candidates
+            .map(normalizeSportLabel)
+            .some((s) => set.has(s));
+        });
       }
       // In Events scope, ignore composition/format/skill filters (not applicable)
       if (!eventsScope && selectedComps.length > 0) {
