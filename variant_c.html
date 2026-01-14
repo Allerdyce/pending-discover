@@ -9898,9 +9898,6 @@
     import { fetchActivitiesFromSupabase } from './src/lib/supabase.js';
 
     async function loadAllData() {
-      // Expose globally for external calls/console debugging
-      window.loadAllData = loadAllData;
-
       // GUARD: If data is already populated, don't re-fetch
       if (window.activities && window.activities.length > 0) {
         console.log("loadAllData: Data already loaded, returning existing activities.");
@@ -10156,6 +10153,8 @@
       }
       return window.activities;
     }
+    // Expose globally for external calls/console debugging
+    window.loadAllData = loadAllData;
 
     // --- SPORTS NORMALIZATION & DERIVATION ---
     const CANONICAL_SPORTS = [
