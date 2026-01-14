@@ -1621,6 +1621,20 @@
     const subNavButtons = document.querySelectorAll("#sub-nav-b button");
 
     // 2. Wire Sub-Nav Buttons (Leagues, Daily, Rentals)
+    // Helper: trigger the existing filtering pipeline without depending on internal function names
+    function triggerRerenderFromBridge() {
+      if (typeof applyFiltersAndRerender === 'function') {
+        applyFiltersAndRerender();
+        return;
+      }
+      // Fall back to the filters form's change handler (wired in the main script)
+      const filtersForm = document.getElementById('filters-form');
+      if (filtersForm) {
+        filtersForm.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (typeof updateResultsHeading === 'function') updateResultsHeading();
+    }
+
     subNavButtons.forEach(btn => {
       btn.addEventListener("click", (e) => {
         // Visual: Active State
@@ -1653,10 +1667,8 @@
           hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
           hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true })); // Just in case
 
-          // Some code paths only rerender on explicit apply; call render as a safety net.
-          if (typeof applyFiltersAndRerender === 'function') applyFiltersAndRerender();
-          else if (typeof renderActivities === 'function') renderActivities();
-          if (typeof updateResultsHeading === 'function') updateResultsHeading();
+          // Ensure UI reflects new scope in both dev (inline) and prod (bundled) builds.
+          triggerRerenderFromBridge();
         }
       });
     });
@@ -1668,6 +1680,7 @@
       hiddenActivityInput.value = "Leagues";
       hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
       hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true }));
+      triggerRerenderFromBridge();
     }
 
     // 4. Wire Macro Tabs (Sports, Events, Fitness, Volunteer)
