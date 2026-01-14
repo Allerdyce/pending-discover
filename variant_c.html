@@ -997,30 +997,22 @@
             <div class="flex items-center gap-6 border-b border-gray-200 w-full mb-4 relative z-50">
               <button id="tab-sports"
                 class="flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-bold text-gray-900">
-                <img
-                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/sports-icon.png"
-                  class="h-8 w-8 object-contain">
+                <img src="sports.png" class="h-8 w-8 object-contain">
                 <span>Sports</span>
               </button>
               <button id="tab-events"
                 class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
-                <img
-                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/events-icon.png"
-                  class="h-8 w-8 object-contain">
+                <img src="events.png" class="h-8 w-8 object-contain">
                 <span>Events</span>
               </button>
               <button id="tab-fitness"
                 class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
-                <img
-                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/fitness-icon.png"
-                  class="h-8 w-8 object-contain">
+                <img src="fitness.png" class="h-8 w-8 object-contain">
                 <span>Fitness</span>
               </button>
               <button id="tab-volunteer"
                 class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
-                <img
-                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/volunteer-icon.png"
-                  class="h-8 w-8 object-contain">
+                <img src="volunteer.png" class="h-8 w-8 object-contain">
                 <span>Volunteer</span>
               </button>
             </div>
@@ -1625,11 +1617,12 @@
       const base = "https://www.youtube.com/embed/";
       const params = `autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0${originParam}`;
       const src = `${base}${videoId}?${params}`;
-      // Center-crop trick for portrait content: oversize width and center
+        // Center-crop trick for portrait content: force full-bleed landscape crop.
+        // We overscan in both directions and keep it centered.
       return `
                 <div class="media-slide absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300">
                     <div class="absolute inset-0 overflow-hidden bg-black">
-                        <iframe class="absolute top-1/2 left-1/2 w-[180%] h-[180%] -translate-x-1/2 -translate-y-1/2 pointer-events-none" src="${src}" title="Video" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen playsinline referrerpolicy="origin-when-cross-origin"></iframe>
+                <iframe class="yt-cover pointer-events-none" src="${src}" title="Video" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen playsinline referrerpolicy="origin-when-cross-origin"></iframe>
                     </div>
                 </div>`;
     }
@@ -2127,7 +2120,13 @@
           state.sports = [];
           buildSportsGrid();
           updateSportsInputDisplay();
-          renderActivities();
+          // Drive filtering via the existing pipeline (safe under bundling/minification)
+          if (typeof applyFiltersAndRerender === 'function') {
+            applyFiltersAndRerender();
+          } else {
+            const form = document.getElementById('filterForm');
+            if (form) form.dispatchEvent(new Event('input', { bubbles: true }));
+          }
         };
       }
       // Setup done button
@@ -2182,7 +2181,12 @@
             activeSports.add('All');
             buildSportsGrid(); // Re-render
             updateSportsInputDisplay();
-            renderActivities();
+            if (typeof applyFiltersAndRerender === 'function') {
+              applyFiltersAndRerender();
+            } else {
+              const form = document.getElementById('filterForm');
+              if (form) form.dispatchEvent(new Event('input', { bubbles: true }));
+            }
             return;
           }
 
@@ -2196,7 +2200,12 @@
 
           buildSportsGrid();
           updateSportsInputDisplay();
-          renderActivities();
+          if (typeof applyFiltersAndRerender === 'function') {
+            applyFiltersAndRerender();
+          } else {
+            const form = document.getElementById('filterForm');
+            if (form) form.dispatchEvent(new Event('input', { bubbles: true }));
+          }
         });
         return btn;
       };
@@ -2242,6 +2251,39 @@
       if (countSpan) {
         const c = state.sports ? state.sports.length : 0;
         countSpan.textContent = `${c} selected`;
+      }
+
+      // --- Bridge to legacy filter pipeline ---
+      // The existing filtering code expects checkboxes under #sports-dropdown.
+      // Variant C renders pills; we keep a hidden checkbox list in sync so the
+      // rest of the app (and any older handlers) can keep working.
+      const dd = document.getElementById('sports-dropdown');
+      if (dd) {
+        let list = dd.querySelector('#sports-dropdown-checkboxes');
+        if (!list) {
+          list = document.createElement('div');
+          list.id = 'sports-dropdown-checkboxes';
+          list.className = 'hidden';
+          dd.appendChild(list);
+        }
+
+        const allSports = Array.from(new Set([...socialSports, ...compSports]))
+          .filter((s) => s && s !== 'All');
+
+        list.innerHTML = allSports
+          .map((s) => {
+            const safe = String(s).replace(/"/g, '&quot;');
+            return `<label class="hidden"><input type="checkbox" data-sport="${safe}" value="${safe}"></label>`;
+          })
+          .join('');
+
+        // Apply checked state from appState
+        const selected = new Set(state.sports || []);
+        list
+          .querySelectorAll('input[type="checkbox"][data-sport]')
+          .forEach((cb) => {
+            cb.checked = selected.has(cb.getAttribute('data-sport'));
+          });
       }
     }
 
