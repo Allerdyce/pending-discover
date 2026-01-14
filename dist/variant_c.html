@@ -1005,10 +1005,23 @@
                   gap: 10px;
                 }
 
+                /* Pills should hug content and stay on a single row (scroll if needed) */
                 #hero-variant-b .hero-filters-pills {
-                  display: grid;
-                  grid-template-columns: 1fr 1fr;
+                  display: flex;
+                  flex-wrap: nowrap;
                   gap: 10px;
+                  overflow-x: auto;
+                  -webkit-overflow-scrolling: touch;
+                  padding-bottom: 2px;
+                }
+
+                #hero-variant-b .hero-filters-pills > .relative {
+                  flex: 0 0 auto;
+                }
+
+                #hero-variant-b .hero-filters-pills button {
+                  width: auto !important;
+                  white-space: nowrap;
                 }
 
                 #hero-variant-b .hero-divider {
@@ -1043,27 +1056,47 @@
                 #hero-variant-b #daily-banner-b .daily-banner-checklist {
                   display: none !important;
                 }
+
+                /* Ensure the explainer text stays visible/legible on mobile */
+                #hero-variant-b #daily-banner-b .daily-banner-detail {
+                  display: block !important;
+                }
+
+                /* Macro tabs: reduce gap and stack icon above label */
+                #hero-variant-b .macro-tabs {
+                  gap: 12px;
+                }
+
+                #hero-variant-b .macro-tab-btn {
+                  flex-direction: column;
+                  gap: 6px;
+                }
+
+                #hero-variant-b .macro-tab-btn img {
+                  height: 28px;
+                  width: 28px;
+                }
               }
             </style>
             <!-- Level 1: Macro Tabs -->
-            <div class="flex justify-center items-center gap-12 py-6 pb-3 bg-white relative z-50">
+            <div class="macro-tabs flex justify-center items-center gap-12 py-6 pb-3 bg-white relative z-50">
               <button id="tab-sports"
-                class="flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-semibold text-gray-900">
+                class="macro-tab-btn flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-semibold text-gray-900">
                 <img src="/assets/sports-O7PDT5gm.png" class="h-8 w-8 object-contain">
                 <span>Sports</span>
               </button>
               <button id="tab-events"
-                class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
+                class="macro-tab-btn flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
                 <img src="/assets/events-D5VNzR_l.png" class="h-8 w-8 object-contain">
                 <span>Events</span>
               </button>
               <button id="tab-fitness"
-                class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
+                class="macro-tab-btn flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
                 <img src="/assets/fitness-D0JLUB7i.png" class="h-8 w-8 object-contain">
                 <span>Fitness</span>
               </button>
               <button id="tab-volunteer"
-                class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
+                class="macro-tab-btn flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
                 <img src="/assets/volunteer-BU1BsBEk.png" class="h-8 w-8 object-contain">
                 <span>Volunteer</span>
               </button>
