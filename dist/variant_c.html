@@ -355,7 +355,9 @@
                 Weekly games and playoffs. Sign up solo, with friends, or a
                 full team — we guarantee a game every week.
               </div>
-              <div id="daily-type-container" class="mt-3 hidden" aria-hidden="true">
+                  <!-- Variant C: hide sidebar daily pills (All / Drop-ins / Pickups);
+                    Daily segmentation is provided in the hero area instead. -->
+                  <div id="daily-type-container" class="mt-3 hidden" aria-hidden="true" style="display:none !important;">
                 <div class="mt-2 flex flex-nowrap gap-2 overflow-x-auto" role="group" aria-label="Daily type">
                   <label class="cursor-pointer">
                     <input type="radio" name="daily-type" class="filter-input sr-only peer" id="daily-all"
