@@ -1216,17 +1216,8 @@
             </div>
 
             <!-- Level 3: Dropdown Pills & City -->
-            <div class="hero-filters-row flex justify-between items-center mt-6 px-1 relative z-50">
+            <div class="hero-filters-row flex flex-wrap items-center justify-start gap-3 mt-6 px-1 relative z-50">
               <div class="hero-filters-pills flex items-center justify-start gap-3">
-                <!-- Sports Pill -->
-                <div class="relative group flex-none">
-                  <button id="pill-sports"
-                    class="px-4 py-2 rounded-full border border-slate-300 bg-white inline-flex items-center gap-2 text-sm font-bold hover:border-black transition">
-                    Sports
-                    <i data-lucide="chevron-down" class="h-4 w-4"></i>
-                  </button>
-                </div>
-
                 <!-- Filters icon pill (mobile: icon only) -->
                 <div class="relative group flex-none">
                   <button id="pill-filters" type="button"
@@ -1234,6 +1225,15 @@
                     aria-label="Filters">
                     <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
                     <span class="pill-label">Filters</span>
+                  </button>
+                </div>
+
+                <!-- Sports Pill -->
+                <div class="relative group flex-none">
+                  <button id="pill-sports"
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white inline-flex items-center gap-2 text-sm font-bold hover:border-black transition">
+                    Sports
+                    <i data-lucide="chevron-down" class="h-4 w-4"></i>
                   </button>
                 </div>
                 <!-- Days Pill -->
@@ -1257,7 +1257,7 @@
               <div class="hero-divider hidden"></div>
 
               <!-- City Selector -->
-              <div class="hero-city flex items-center gap-1 font-bold text-lg text-[#222]">
+              <div class="hero-city ml-auto flex items-center gap-1 font-bold text-lg text-[#222]">
                 Sports in <a href="#"
                   class="text-[#013AF5] underline decoration-2 underline-offset-4 decoration-dotted hover:decoration-solid">Baltimore</a>
               </div>
