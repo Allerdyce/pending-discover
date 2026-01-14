@@ -4514,21 +4514,8 @@
                     </div>`;
         activityCardsContainer.appendChild(wizardCta);
       }
-      // If nothing rendered (no results), show a clear wizard CTA to help the user
-      if (renderedCount === 0) {
-        const noResults = document.createElement("article");
-        noResults.className =
-          "rounded-2xl overflow-hidden flex flex-col bg-white border border-slate-200";
-        noResults.innerHTML = `
-                    <div class="flex-1 relative flex flex-col items-center justify-center text-center p-8 gap-3 overflow-hidden">
-                        <div class="relative z-10 flex flex-col items-center gap-2">
-                            <h3 class="text-xl font-bold text-gray-900">We couldn’t find a match</h3>
-                            <p class="text-sm md:text-base text-gray-600">Try the Wizard to discover activities that fit your schedule and vibe.</p>
-                            <button type="button" class="mt-2 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700" data-action="open-wizard">Answer a few quesitons</button>
-                        </div>
-                    </div>`;
-        activityCardsContainer.appendChild(noResults);
-      }
+      // Variant C: do not show the Wizard empty-state box when no results.
+      // (Per request, hide this UI in Variant A and C.)
       renderPagination(total);
       // Render Lucide icons for any placeholders in newly injected DOM
       if (window.lucide && typeof window.lucide.createIcons === "function") {
