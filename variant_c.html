@@ -11854,17 +11854,51 @@
     }
 
     // 4. Wire Macro Tabs (Sports, Events, Fitness, Volunteer)
-    // These are the top-level "Level 1" tabs. 
-    // We map them to specific Activity types. if data exists, they will show.
-    // Macro tabs are "top-level" categories. In this build, Sports should *not* force the scope back to
-    // "Leagues" because users can be browsing Daily Sports / Tournaments / Court Rentals within Sports.
-    // So Sports behaves as "stay on whatever Sports scope is currently active".
+    // These are the top-level "Level 1" tabs.
+    // Expected behavior:
+    // - Clicking Sports always returns to the Sports default scope: "Leagues".
+    // - The Sports sub-nav (Leagues/Daily Sports/Tournaments/Court Rentals) is only relevant when
+    //   Sports macro is active; hide it when Events/Fitness/Volunteer are selected.
     const macroTabs = [
-      { id: "tab-sports", value: null },
+      { id: "tab-sports", value: "Leagues" },
       { id: "tab-events", value: "Events" },
       { id: "tab-fitness", value: "Fitness" },
       { id: "tab-volunteer", value: "Volunteer" }
     ];
+
+    function setSportsSubnavVisible(isVisible) {
+      const subNav = document.getElementById('sub-nav-b');
+      if (!subNav) return;
+      if (isVisible) subNav.classList.remove('hidden');
+      else subNav.classList.add('hidden');
+    }
+
+    function setActiveSubnavButtonForScope(scopeLabel) {
+      // Keep sub-nav visuals in sync when Sports macro forces "Leagues".
+      try {
+        const wanted = String(scopeLabel || '').toLowerCase().trim();
+        const scopeToDataset = {
+          'leagues': 'leagues',
+          'daily sports': 'daily',
+          'tournaments': 'tournaments',
+          'private rentals': 'Private Rentals',
+        };
+        const want = scopeToDataset[wanted];
+        if (!want) return;
+        subNavButtons.forEach((b) => {
+          const raw = b?.dataset?.scope;
+          const isMatch = raw === want;
+          b.classList.remove('bg-white', 'text-black', 'shadow-sm');
+          b.classList.add('text-gray-500', 'hover:text-black', 'hover:bg-white/50');
+          if (isMatch) {
+            b.classList.remove('text-gray-500', 'hover:text-black', 'hover:bg-white/50');
+            b.classList.add('bg-white', 'text-black', 'shadow-sm');
+          }
+        });
+      } catch (_) {
+        /* no-op */
+      }
+    }
 
     macroTabs.forEach(tabDef => {
       const btn = document.getElementById(tabDef.id);
@@ -11885,15 +11919,16 @@
 
         // Logic: Update Hidden Input
         if (hiddenActivityInput) {
-          // If Sports tab, preserve current sports sub-scope (Leagues/Daily/Tournaments/Private Rentals)
-          const nextValue = tabDef.value == null
-            ? (hiddenActivityInput.value || "Leagues")
-            : tabDef.value;
-
+          const nextValue = tabDef.value;
           hiddenActivityInput.value = nextValue;
           // Dispatch events to trigger A's filtering
           hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
           hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // Show Sports-only sub-nav only when Sports macro is active.
+          const isSportsMacro = tabDef.id === 'tab-sports';
+          setSportsSubnavVisible(isSportsMacro);
+          if (isSportsMacro) setActiveSubnavButtonForScope(nextValue);
 
           // Use the existing rerender pipeline (safe for prod builds)
           triggerRerenderFromBridge();
@@ -11906,6 +11941,9 @@
     // Set "Sports" as visually active by default (handled in HTML now, but keeping for safety)
     const defaultTab = document.getElementById("tab-sports");
     if (defaultTab) defaultTab.classList.add("border-b-4", "border-[#0034DD]", "font-bold");
+
+    // Ensure Sports sub-nav is visible on initial load
+    setSportsSubnavVisible(true);
 
     // 5. Wire Dropdown Pills (Sports, Days, Neighborhood)
     const pillDropdownMap = {
