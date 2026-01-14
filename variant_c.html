@@ -1080,6 +1080,28 @@
                   height: 28px;
                   width: 28px;
                 }
+
+                /* Mobile-only: shorten Sports sub-nav labels */
+                #sub-nav-b button[data-scope="daily"] {
+                  font-size: 0;
+                }
+                #sub-nav-b button[data-scope="daily"]::after {
+                  content: "Dailies";
+                  font-size: 0.875rem;
+                }
+
+                #sub-nav-b button#btn-court-rentals {
+                  font-size: 0;
+                }
+                #sub-nav-b button#btn-court-rentals::after {
+                  content: "Rentals";
+                  font-size: 0.875rem;
+                }
+
+                /* Mobile-only: hide floating map button for this variant test */
+                #mobile-view-map {
+                  display: none !important;
+                }
               }
 
               /* Prevent macro tab underline from shifting layout when toggled */
