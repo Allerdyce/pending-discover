@@ -11866,8 +11866,15 @@
 
       console.log("Final window.activities size for render:", window.activities.length);
 
-      renderActivities();
-      if (typeof updateResultsHeading === "function") updateResultsHeading();
+      // In production builds, internal function names may be minified and not available on window.
+      // Trigger rendering through the existing filter pipeline instead of calling renderActivities() directly.
+      if (typeof triggerRerenderFromBridge === 'function') {
+        triggerRerenderFromBridge();
+      } else {
+        const filtersForm = document.getElementById('filters-form');
+        if (filtersForm) filtersForm.dispatchEvent(new Event('change', { bubbles: true }));
+        if (typeof updateResultsHeading === "function") updateResultsHeading();
+      }
       if (typeof window.refreshNeighborhoodDropdown === "function") window.refreshNeighborhoodDropdown();
 
       // Force initial scope/filter application if needed
