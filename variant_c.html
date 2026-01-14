@@ -310,14 +310,7 @@
   <div id="list-view-container">
     <main class="mx-auto max-w-[1400px] p-4">
       <!-- Filters and Results -->
-      <!-- Mobile actions row: Filters button -->
-      <div class="md:hidden flex items-center justify-end mb-3">
-        <button id="mobile-filters-open" type="button"
-          class="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm">
-          <i data-lucide="sliders-horizontal" class="h-4 w-4 text-[rgb(34,34,34)]"></i>
-          Filters
-        </button>
-      </div>
+      <!-- Mobile actions row: (removed) top-right Filters button; use in-row Filters pill instead -->
 
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Left Column: Filters -->
@@ -1217,37 +1210,37 @@
 
             <!-- Level 3: Dropdown Pills & City -->
             <div class="hero-filters-row flex justify-between items-center mt-6 px-1 relative z-50">
-              <div class="hero-filters-pills flex items-center gap-3">
+              <div class="hero-filters-pills flex items-center justify-start gap-3">
                 <!-- Sports Pill -->
-                <div class="relative group">
+                <div class="relative group flex-none">
                   <button id="pill-sports"
-                    class="px-4 py-2 rounded-full border border-slate-300 bg-white flex items-center gap-2 text-sm font-bold hover:border-black transition w-full justify-center">
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white inline-flex items-center gap-2 text-sm font-bold hover:border-black transition">
                     Sports
                     <i data-lucide="chevron-down" class="h-4 w-4"></i>
                   </button>
                 </div>
 
                 <!-- Filters icon pill (mobile: icon only) -->
-                <div class="relative group">
+                <div class="relative group flex-none">
                   <button id="pill-filters" type="button"
-                    class="px-4 py-2 rounded-full border border-slate-300 bg-white flex items-center gap-2 text-sm font-bold hover:border-black transition w-full justify-center"
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white inline-flex items-center gap-2 text-sm font-bold hover:border-black transition"
                     aria-label="Filters">
                     <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
                     <span class="pill-label">Filters</span>
                   </button>
                 </div>
                 <!-- Days Pill -->
-                <div class="relative group">
+                <div class="relative group flex-none">
                   <button id="pill-days"
-                    class="px-4 py-2 rounded-full border border-slate-300 bg-white flex items-center gap-2 text-sm font-bold hover:border-black transition w-full justify-center">
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white inline-flex items-center gap-2 text-sm font-bold hover:border-black transition">
                     Days
                     <i data-lucide="chevron-down" class="h-4 w-4"></i>
                   </button>
                 </div>
                 <!-- Neighborhood Pill -->
-                <div class="relative group">
+                <div class="relative group flex-none">
                   <button id="pill-hood"
-                    class="px-4 py-2 rounded-full border border-slate-300 bg-white flex items-center gap-2 text-sm font-bold hover:border-black transition w-full justify-center">
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white inline-flex items-center gap-2 text-sm font-bold hover:border-black transition">
                     Place
                     <i data-lucide="chevron-down" class="h-4 w-4"></i>
                   </button>
@@ -12288,7 +12281,7 @@
     // 5. Wire Dropdown Pills (Sports, Days, Neighborhood)
     const pillDropdownMap = {
       "pill-sports": "dropdown-sports",
-      "pill-filters": "sidebar",
+      // pill-filters is handled separately (opens mobile overlay)
       "pill-days": "dropdown-days",
       "pill-hood": "dropdown-neighborhood"
     };
@@ -12318,30 +12311,44 @@
       });
     }
 
-    // Variant C mobile: Ensure the new Filters pill can always open Filters.
-    // The sidebar is not a dropdown; it may use responsive classes like hidden/lg:block.
-    // We also toggle 'block' to override Tailwind's 'hidden' on small screens.
-    (function initFiltersPillToggle() {
+    // Variant C mobile: make the in-row Filters pill open the same mobile overlay as the (now removed)
+    // top-right Filters button.
+    (function initMobileFiltersOverlay() {
       const filtersBtn = document.getElementById('pill-filters');
-      const sidebar = document.getElementById('sidebar');
-      if (!filtersBtn || !sidebar) return;
+      const overlay = document.getElementById('mobile-filters-overlay');
+      const body = document.getElementById('mobile-filters-body');
+      const form = document.getElementById('filters-form');
+      const anchor = document.getElementById('filters-form-anchor');
+      const closeBtn = document.getElementById('mobile-filters-close');
+      const doneBtn = document.getElementById('mobile-filters-done');
+
+      if (!filtersBtn || !overlay || !body || !form || !anchor) return;
+
+      const open = () => {
+        closeAllDropdowns();
+        overlay.classList.remove('hidden');
+        body.appendChild(form);
+      };
+
+      const close = () => {
+        overlay.classList.add('hidden');
+        // Restore filters form back to its original DOM position.
+        anchor.parentNode.insertBefore(form, anchor.nextSibling);
+      };
 
       filtersBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
-
-        const isHidden = sidebar.classList.contains('hidden');
-        closeAllDropdowns();
-        if (isHidden) {
-          sidebar.classList.remove('hidden');
-          sidebar.classList.add('block');
-        } else {
-          sidebar.classList.add('hidden');
-          sidebar.classList.remove('block');
-        }
+        if (overlay.classList.contains('hidden')) open();
+        else close();
       });
 
-      // Prevent outside click handler from instantly hiding the sidebar when clicking inside it.
-      sidebar.addEventListener('click', (e) => e.stopPropagation());
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      if (doneBtn) doneBtn.addEventListener('click', close);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target && e.target.closest && e.target.closest('[data-overlay-close]')) close();
+      });
     })();
 
     Object.keys(pillDropdownMap).forEach(pillId => {
