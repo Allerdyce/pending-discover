@@ -1,0 +1,230 @@
+{
+    "sections": [
+        {
+            "dateLabel": "Today",
+            "events": [
+                {
+                    "type": "Class",
+                    "title": "Cardio Boxing Class",
+                    "neighborhood": "Downtown",
+                    "locationName": "UAPC - 10 Light",
+                    "startTime": "5:30pm",
+                    "spots": {
+                        "display": "1/5",
+                        "taken": 1,
+                        "total": 5
+                    },
+                    "pricing": null,
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/8ee2ef35-771d-4870-a7fb-150aa1bb8b21/6d478998-19b0-4a45-96df-d940c7e51123_icon.jpeg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/8ee2ef35-771d-4870-a7fb-150aa1bb8b21/6d478998-19b0-4a45-96df-d940c7e51123_icon.jpeg"
+                        }
+                    }
+                },
+                {
+                    "type": "Class",
+                    "title": "Pilates Class",
+                    "neighborhood": "Brewers Hill",
+                    "locationName": "Crunch Fitness",
+                    "startTime": "6:00pm",
+                    "spots": {
+                        "display": "1/4",
+                        "taken": 1,
+                        "total": 4
+                    },
+                    "pricing": null,
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/96863977-2d83-4b92-ae1b-c980a843b29b/ce23813e-2bd1-488f-b97b-921e228eae2c_icon.jpg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/96863977-2d83-4b92-ae1b-c980a843b29b/ce23813e-2bd1-488f-b97b-921e228eae2c_icon.jpg"
+                        }
+                    }
+                },
+                {
+                    "type": "Class",
+                    "title": "Total Body Workout Class",
+                    "neighborhood": "Downtown",
+                    "locationName": "UAPC - 10 Light",
+                    "startTime": "6:30pm",
+                    "spots": null,
+                    "pricing": {
+                        "standard": {
+                            "price": 15,
+                            "currency": "USD"
+                        },
+                        "member": {
+                            "price": 0,
+                            "currency": "USD"
+                        }
+                    },
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/fbeabcdd-835e-47c1-bf4f-679c89f84307/ece034b9-deee-4fb3-af5c-13b689ed9206_icon.jpg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/fbeabcdd-835e-47c1-bf4f-679c89f84307/ece034b9-deee-4fb3-af5c-13b689ed9206_icon.jpg"
+                        }
+                    }
+                },
+                {
+                    "type": "Class",
+                    "title": "Hatha Flow Yoga Class",
+                    "neighborhood": "Brewers Hill",
+                    "locationName": "Crunch Fitness",
+                    "startTime": "7:00pm",
+                    "spots": null,
+                    "pricing": {
+                        "standard": {
+                            "price": 15,
+                            "currency": "USD"
+                        },
+                        "member": {
+                            "price": 0,
+                            "currency": "USD"
+                        }
+                    },
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/af393f12-e9b8-466c-a248-08b4c0ab2293/fceb165c-d8a0-43f6-b785-8aa5e757dbd2_icon.jpg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/af393f12-e9b8-466c-a248-08b4c0ab2293/fceb165c-d8a0-43f6-b785-8aa5e757dbd2_icon.jpg"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "dateLabel": "Sat Jan 10",
+            "events": [
+                {
+                    "type": "Class",
+                    "title": "Zumba Class",
+                    "neighborhood": "Brewers Hill",
+                    "locationName": "Crunch Fitness",
+                    "startTime": "9:00am",
+                    "spots": {
+                        "display": "3/4",
+                        "taken": 3,
+                        "total": 4
+                    },
+                    "pricing": null,
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/7c7f9d4c-f9d7-453c-9955-838b97ee79b9/98f6fb4f-df98-461a-91dc-9b3b6b972386_icon.jpeg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/7c7f9d4c-f9d7-453c-9955-838b97ee79b9/98f6fb4f-df98-461a-91dc-9b3b6b972386_icon.jpeg"
+                        }
+                    }
+                },
+                {
+                    "type": "Class",
+                    "title": "Yoga - Class",
+                    "neighborhood": "Downtown",
+                    "locationName": "UAPC - 10 Light",
+                    "startTime": "10:00am",
+                    "spots": {
+                        "display": "1/5",
+                        "taken": 1,
+                        "total": 5
+                    },
+                    "pricing": null,
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/9fb558a8-c5c1-42d6-9ad1-9f7aa4c55483/0bbde745-8938-4438-bb21-db97835d116d_icon.jpg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/9fb558a8-c5c1-42d6-9ad1-9f7aa4c55483/0bbde745-8938-4438-bb21-db97835d116d_icon.jpg"
+                        }
+                    }
+                },
+                {
+                    "type": "Class",
+                    "title": "Total Body Workout Class",
+                    "neighborhood": "Downtown",
+                    "locationName": "UAPC - 10 Light",
+                    "startTime": "10:00am",
+                    "spots": {
+                        "display": "3/5",
+                        "taken": 3,
+                        "total": 5
+                    },
+                    "pricing": {
+                        "standard": {
+                            "price": 15,
+                            "currency": "USD"
+                        },
+                        "member": {
+                            "price": 0,
+                            "currency": "USD"
+                        }
+                    },
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/36e015a9-ceae-4cf5-bc78-04bc25dedf08/ce7b6109-415a-4225-a961-741e6e47d17c_icon.jpg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/36e015a9-ceae-4cf5-bc78-04bc25dedf08/ce7b6109-415a-4225-a961-741e6e47d17c_icon.jpg"
+                        }
+                    }
+                },
+                {
+                    "type": "Class",
+                    "title": "HIIT Class",
+                    "neighborhood": "Brewers Hill",
+                    "locationName": "Crunch Fitness",
+                    "startTime": "10:00am",
+                    "spots": null,
+                    "pricing": {
+                        "standard": {
+                            "price": 15,
+                            "currency": "USD"
+                        },
+                        "member": {
+                            "price": 0,
+                            "currency": "USD"
+                        }
+                    },
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/13fd0c1e-0f77-4038-9273-cd42f84b9e5e/60645ebd-2a81-4f28-97bf-2226d00eafdf_icon.jpeg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/13fd0c1e-0f77-4038-9273-cd42f84b9e5e/60645ebd-2a81-4f28-97bf-2226d00eafdf_icon.jpeg"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "dateLabel": "Sun Jan 11",
+            "events": [
+                {
+                    "type": "Class",
+                    "title": "Spin - Class",
+                    "neighborhood": "Downtown",
+                    "locationName": "Mac (Maryland Athletic Club)",
+                    "startTime": "9:15am",
+                    "spots": null,
+                    "pricing": {
+                        "standard": {
+                            "price": 15,
+                            "currency": "USD"
+                        },
+                        "member": {
+                            "price": 0,
+                            "currency": "USD"
+                        }
+                    },
+                    "images": {
+                        "coverImage": {
+                            "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/39e62363-e4de-46ec-91a7-2bfd30ac9f5b/399d7729-dde8-44de-a0f8-716304971265_icon.jpeg",
+                            "backgroundImage": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/39e62363-e4de-46ec-91a7-2bfd30ac9f5b/399d7729-dde8-44de-a0f8-716304971265_icon.jpeg"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "pagination": {
+        "currentPage": 1,
+        "visiblePages": [
+            1,
+            2,
+            3,
+            6
+        ],
+        "hasPrev": false,
+        "hasNext": true
+    }
+}

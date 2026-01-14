@@ -1,0 +1,20 @@
+{
+    "rewrites": [
+        {
+            "source": "/",
+            "destination": "/variant_c.html"
+        },
+        {
+            "source": "/variant_c",
+            "destination": "/variant_c.html"
+        },
+        {
+            "source": "/wizard",
+            "destination": "/wizard.html"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/$1"
+        }
+    ]
+}

@@ -1,0 +1,105 @@
+{
+    "card": {
+        "type": "DiscoverCard",
+        "title": "3/24 - Spring Volunteer Town Hall - Zoom Event",
+        "clickable": true,
+        "images": {
+            "programImage": {
+                "alt": "coed-N/A",
+                "sources": [
+                    {
+                        "type": "image/avif",
+                        "srcset": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/e12315d7-345b-4a97-b454-982e83d6edbc/ae4c0571-0a84-4278-bcf9-ee26de2d87c6_icon.avif"
+                    },
+                    {
+                        "type": "image/webp",
+                        "srcset": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/e12315d7-345b-4a97-b454-982e83d6edbc/ae4c0571-0a84-4278-bcf9-ee26de2d87c6_icon.webp"
+                    },
+                    {
+                        "type": "image/png",
+                        "srcset": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/e12315d7-345b-4a97-b454-982e83d6edbc/ae4c0571-0a84-4278-bcf9-ee26de2d87c6_icon.png"
+                    }
+                ],
+                "imgSrc": "https://s3.amazonaws.com/rivall-user-uploads/prodUploads/leagueHeader/e12315d7-345b-4a97-b454-982e83d6edbc/ae4c0571-0a84-4278-bcf9-ee26de2d87c6_icon.webp"
+            }
+        },
+        "location": {
+            "label": "Virtual Event - Zoom",
+            "googleMaps": {
+                "href": "https://www.google.com/maps/place/39.2903848,-76.6121893",
+                "target": "_blank",
+                "rel": "noopener noreferrer"
+            },
+            "icon": {
+                "alt": "pin",
+                "src": "/static/media/location.4d8553404d3e67d41ff96cdb7d1a0a93.svg"
+            }
+        },
+        "time": {
+            "display": "Mar 24  •  7:00 PM - 8:00 PM",
+            "dateText": "Mar 24",
+            "startTime": "7:00 PM",
+            "endTime": "8:00 PM",
+            "icon": {
+                "alt": "calendar",
+                "src": "/static/media/calendar.9a9c9e5543c7d78502d78b72355c3760.svg"
+            }
+        },
+        "format": {
+            "display": "Coed",
+            "icon": {
+                "alt": "format_icon",
+                "src": "/static/media/format_icon.3b04461fa86d299f6975dfc21d378d5f.svg"
+            }
+        },
+        "skillLevel": {
+            "display": "Skill Level - All",
+            "level": "All",
+            "icon": {
+                "alt": "skill level",
+                "src": "/static/media/skill_level.6bc44205309913cc135ff540faba5ecd.svg"
+            }
+        },
+        "features": [],
+        "banners": {
+            "phase": "Registration Ends 03/24",
+            "registrationEnds": "03/24"
+        },
+        "pricing": {
+            "perPerson": {
+                "current": 0.0,
+                "currency": "USD",
+                "display": "$0.00",
+                "unit": "person"
+            },
+            "perTeam": {
+                "current": 0.0,
+                "currency": "USD",
+                "display": "$0.00",
+                "unit": "team"
+            },
+            "basePrice": null
+        }
+    },
+    "pagination": {
+        "currentPage": 1,
+        "visiblePages": [
+            1
+        ],
+        "hasPrev": false,
+        "hasNext": false,
+        "controls": {
+            "prev": {
+                "disabled": true,
+                "iconSrc": "/static/media/chevron-back-outline.bebb2fdc89bdf3770c1151b7c51820a2.svg"
+            },
+            "next": {
+                "disabled": true,
+                "iconSrc": "/static/media/chevron-forward-outline.4cafdcf31e4990112097f73fcc80f13f.svg"
+            }
+        }
+    },
+    "notes": [
+        "The /static/media/* icon URLs are relative to the site origin; if you want fully-qualified URLs, prepend your site base URL."
+    ]
+}

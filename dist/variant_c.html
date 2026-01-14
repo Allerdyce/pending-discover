@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volo Discover Build - Baltimore, MD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            blue: {
+              600: '#013AF5',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <style>
+    /* Regular weight */
+    @font-face {
+      font-family: "VoloSansPro";
+      src: url("./VoloSansPro.woff") format("woff"),
+        url("./VoloSansPro.otf") format("opentype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Ultra / ExtraBold weight */
+    @font-face {
+      font-family: "VoloSansPro";
+      src: url("./VoloSans-ultra.ttf") format("truetype");
+      font-weight: 800;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    body {
+      font-family: "VoloSansPro", "Inter", sans-serif;
+      background-color: #ffffff;
+      /* Page background changed to white */
+    }
+
+    /* Removed global remap of red to orange to avoid affecting non-Event UI */
+    /* .text-red-600 { color: #EA580B !important; }
+        .border-red-600 { border-color: #EA580B !important; } */
+    .icon-text-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Custom styles for price slider */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1.25rem;
+      height: 1.25rem;
+      background: #3b82f6;
+      cursor: pointer;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 1.25rem;
+      height: 1.25rem;
+      background: #3b82f6;
+      cursor: pointer;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+
+    /* Dual-thumb event time sliders: both thumbs blue for consistency */
+    /* Event time slider thumbs: 14px thumb on 6px track -> center with margin-top = -(thumb+2*border - track)/2 = -(14+4-6)/2 = -6px */
+    #event-time-start::-webkit-slider-thumb,
+    #event-time-end::-webkit-slider-thumb {
+      width: 14px;
+      height: 14px;
+      margin-top: -6px;
+      background: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+
+    #event-time-start::-moz-range-thumb,
+    #event-time-end::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      margin-top: -6px;
+      background: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+
+    /* Thicker track for visibility */
+    #event-time-start::-webkit-slider-runnable-track,
+    #event-time-end::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 9999px;
+      background: transparent;
+    }
+
+    #event-time-start::-moz-range-track,
+    #event-time-end::-moz-range-track {
+      height: 6px;
+      border-radius: 9999px;
+      background: transparent;
+    }
+
+    /* Remove default focus outline on range inputs to avoid large blue box */
+    #event-time-start:focus,
+    #event-time-end:focus {
+      outline: none;
+    }
+
+    #event-time-start,
+    #event-time-end {
+      background: transparent;
+    }
+
+    /* Map container styles */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+    }
+
+    #map,
+    #map-preview {
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Overlay title on images: white text with subtle shadow and 2-line clamp */
+    .overlay-title {
+      color: #fff;
+      font-size: 1.2rem !important;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45), 0 0 6px rgba(0, 0, 0, 0.25);
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Emoji used in elevator pills */
+    .elev-emoji {
+      font-size: 13px;
+      line-height: 1;
+      display: inline-block;
+      transform: translateY(-0.5px);
+    }
+
+    /* Bottom gradient to improve contrast for pills/title (YouTube-style) */
+    .img-bottom-gradient {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 60%;
+      background: linear-gradient(to top,
+          rgba(0, 0, 0, 0.75) 0%,
+          rgba(0, 0, 0, 0.35) 45%,
+          rgba(0, 0, 0, 0) 100%);
+      pointer-events: none;
+    }
+
+    /* Force YouTube (iframe) to cover container (good for portrait videos in landscape frames) */
+    .yt-cover {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      height: 100%;
+      width: 200%;
+      /* overscan horizontally to ensure cover on portrait videos */
+    }
+
+    @media (min-width: 768px) {
+      .yt-cover {
+        width: 180%;
+      }
+    }
+
+    /* Use Open Sans for elevator pills with semi-bold weight */
+    .elev-pill {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-weight: 700;
+    }
+
+    /* Activity type pill shares the font and tight sizing */
+    .type-pill {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-weight: 700;
+    }
+
+    /* Meta text (composition/age, skill, format) */
+    .meta-text {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-weight: 700;
+    }
+
+    /* Open Sans SemiBold utility for headings/titles in dropdowns */
+    .font-open-sans-semibold {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-weight: 600;
+    }
+
+    /* Open Sans Medium utility */
+    .font-open-sans-medium {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-weight: 500;
+    }
+
+    /* Card title blue link font */
+    .card-title-link {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    /* Map drawer title font matches list filter headers */
+    #map-filter-panel-title {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    /* Hide scrollbars for horizontally-scrollable pills */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Filters typography: titles (h4) semi-bold, subtitles (h5) medium, using Open Sans */
+    #filters-form h4 {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    #filters-form h5 {
+      font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    /* Visible checkbox styling: 1px border and accent color #818494 */
+    input[type="checkbox"]:not(.sr-only) {
+      accent-color: #818494;
+      width: 16px;
+      height: 16px;
+      border: 1px solid #818494 !important;
+      border-radius: 3px;
+      /* keep square-ish look */
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/variant_c-DpeVnBqT.js"></script>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="bg-[#0034dc] shadow-md">
+    <div class="w-full max-w-[1400px] mx-auto px-4 py-3 flex justify-between items-center">
+      <!-- Logo -->
+      <div class="flex items-center space-x-3">
+        <img src="https://rivall-public.s3.us-west-1.amazonaws.com/logos/organization-logos/default.webp" alt="Volo"
+          class="invert brightness-0 h-10 w-auto select-none" />
+      </div>
+      <!-- Navigation -->
+      <nav
+        class="hidden md:flex items-center space-x-8 text-[13px] font-extrabold text-white tracking-wide ml-auto mr-6">
+        <a href="#" class="uppercase hover:opacity-80 transition">Volo Kids</a>
+        <a href="#" class="uppercase hover:opacity-80 transition">Volo Pass</a>
+        <a href="#" class="uppercase hover:opacity-80 transition">Corporate</a>
+        <a href="#" class="uppercase hover:opacity-80 transition">Choose City</a>
+        <a href="#" class="uppercase hover:opacity-80 transition">About</a>
+      </nav>
+      <!-- Right Actions -->
+      <div class="flex items-center space-x-3">
+        <button
+          class="hidden md:inline-flex items-center px-5 py-2.5 rounded-full border border-white text-white text-sm font-normal hover:bg-white/10 transition">
+          Login
+        </button>
+        <button
+          class="inline-flex items-center px-5 py-2.5 rounded-full bg-[#c7ff10] text-black text-sm font-normal hover:brightness-95 transition">
+          Sign up
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div id="list-view-container">
+    <main class="mx-auto max-w-[1400px] p-4">
+      <!-- Filters and Results -->
+      <!-- Mobile actions row: Filters button -->
+      <div class="md:hidden flex items-center justify-end mb-3">
+        <button id="mobile-filters-open" type="button"
+          class="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm">
+          <i data-lucide="sliders-horizontal" class="h-4 w-4 text-[rgb(34,34,34)]"></i>
+          Filters
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Left Column: Filters -->
+        <aside class="hidden lg:block lg:col-span-1" style="max-width: 310px;">
+          <!-- Map Preview -->
+          <div class="bg-white p-0 rounded-2xl border border-slate-200 hidden">
+            <div id="map-preview-container" class="h-40 rounded-lg overflow-hidden cursor-pointer" role="button"
+              aria-label="View these results on a map" title="View on map">
+              <div id="map-preview" class="bg-gray-200 flex items-center justify-center h-full w-full">
+                <span class="text-gray-500">Map Preview</span>
+              </div>
+            </div>
+            <button id="view-map-btn" class="mt-3 w-full text-blue-600 rounded-lg bg-transparent mb-3">
+              View in a map
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <!-- Anchor to restore filters-form after mobile overlay closes -->
+          <div id="filters-form-anchor" class="hidden"></div>
+
+          <div id="filters-form" class="space-y-0 p-0 bg-transparent">
+            <!-- Scope Explainer / Daily Type -->
+            <div id="section-scope-explainer" class="pb-4">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="trophy" class="h-5 w-5 text-[rgb(34,34,34)]" id="scope-explainer-icon"></i>
+                  <h4 class="font-semibold text-lg" id="scope-explainer-title">
+                    Leagues
+                  </h4>
+                </div>
+              </div>
+              <div id="scope-explainer-body" class="text-sm text-gray-700 leading-relaxed">
+                Weekly games and playoffs. Sign up solo, with friends, or a
+                full team — we guarantee a game every week.
+              </div>
+              <div id="daily-type-container" class="mt-3 hidden" aria-hidden="true">
+                <div class="mt-2 flex flex-nowrap gap-2 overflow-x-auto" role="group" aria-label="Daily type">
+                  <label class="cursor-pointer">
+                    <input type="radio" name="daily-type" class="filter-input sr-only peer" id="daily-all"
+                      data-name="All" data-type="all" />
+                    <span
+                      class="inline-block whitespace-nowrap px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">All</span>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="radio" name="daily-type" class="filter-input sr-only peer" id="daily-dropin"
+                      data-name="Drop-ins" data-type="drop-in" />
+                    <span
+                      class="inline-block whitespace-nowrap px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Drop-ins</span>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="radio" name="daily-type" class="filter-input sr-only peer" id="daily-pickup"
+                      data-name="Pickups" data-type="pickup" />
+                    <span
+                      class="inline-block whitespace-nowrap px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Pickups</span>
+                  </label>
+                </div>
+                <div id="daily-type-explainer" class="mt-3 space-y-2 text-sm text-gray-700"></div>
+              </div>
+            </div>
+
+            <!-- Schedule -->
+            <div class="py-2">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="clock" class="h-5 w-5 text-[rgb(34,34,34)]"></i>
+                  <h4 class="font-semibold text-lg">Schedule</h4>
+                </div>
+              </div>
+              <div id="section-schedule" class="space-y-4">
+                <div>
+                  <h5 class="text-sm font-medium">Day of the Week</h5>
+                  <div class="mt-2 flex flex-nowrap gap-2 overflow-x-auto">
+                    <label class="cursor-pointer">
+                      <input type="checkbox" class="filter-input sr-only peer" id="day-mon" data-name="Mon" />
+                      <span
+                        class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">M</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="checkbox" class="filter-input sr-only peer" id="day-tue" data-name="Tue" />
+                      <span
+                        class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">T</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="checkbox" class="filter-input sr-only peer" id="day-wed" data-name="Wed" />
+                      <span
+                        class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">W</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="checkbox" class="filter-input sr-only peer" id="day-thu" data-name="Thu" />
+                      <span
+                        class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">T</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="checkbox" class="filter-input sr-only peer" id="day-fri" data-name="Fri" />
+                      <span
+                        class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">F</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="checkbox" class="filter-input sr-only peer" id="day-sat" data-name="Sat" />
+                      <span
+                        class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">S</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="checkbox" class="filter-input sr-only peer" id="day-sun" data-name="Sun" />
+                      <span
+                        class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">S</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <!-- Start Month (hidden across all scopes) -->
+                  <div id="start-month-block" class="hidden" aria-hidden="true">
+                    <h5 class="text-sm font-medium">Start Month</h5>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <label class="cursor-pointer">
+                        <input type="checkbox" class="filter-input sr-only peer" id="month-september"
+                          data-name="September" />
+                        <span
+                          class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">SEP</span>
+                      </label>
+                      <label class="cursor-pointer">
+                        <input type="checkbox" class="filter-input sr-only peer" id="month-october"
+                          data-name="October" />
+                        <span
+                          class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">OCT</span>
+                      </label>
+                      <label class="cursor-pointer">
+                        <input type="checkbox" class="filter-input sr-only peer" id="month-november"
+                          data-name="November" />
+                        <span
+                          class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">NOV</span>
+                      </label>
+                    </div>
+                  </div>
+                  <!-- Daily Quick Dates (shown in Daily scope only) -->
+                  <div id="daily-quickdate-block" class="hidden" aria-hidden="true">
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <label class="cursor-pointer">
+                        <input type="checkbox" class="filter-input sr-only peer" id="date-today" data-name="Today" />
+                        <span
+                          class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Today</span>
+                      </label>
+                      <label class="cursor-pointer">
+                        <input type="checkbox" class="filter-input sr-only peer" id="date-tomorrow"
+                          data-name="Tomorrow" />
+                        <span
+                          class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Tomorrow</span>
+                      </label>
+                      <label class="cursor-pointer">
+                        <input type="checkbox" class="filter-input sr-only peer" id="date-weekend"
+                          data-name="This Weekend" />
+                        <span
+                          class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">This
+                          Weekend</span>
+                      </label>
+                      <label class="cursor-pointer">
+                        <input type="checkbox" class="filter-input sr-only peer" id="date-nextweek"
+                          data-name="Next Week" />
+                        <span
+                          class="inline-block px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Next
+                          Week</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Events: Start time range filter (shown only in Events scope) -->
+            <div id="events-starttime-block" class="mt-6 mb-8 py-4 hidden" aria-hidden="true">
+              <div class="flex justify-between items-center mb-2">
+                <h5 class="text-sm font-semibold">Start time window</h5>
+                <span id="event-time-range-summary" class="text-sm text-gray-700" aria-live="polite">Any — Any</span>
+              </div>
+              <div class="mt-2 space-y-3">
+                <div id="event-time-track" class="relative h-10 flex items-center select-none"
+                  aria-describedby="event-time-help">
+                  <div class="absolute h-1.5 rounded-full bg-gray-200" style="
+                        top: 50%;
+                        transform: translateY(-50%);
+                        left: 0;
+                        right: 0;
+                      " aria-hidden="true"></div>
+                  <div id="event-time-active-band" class="absolute h-1.5 rounded-full bg-blue-500/40"
+                    style="top: 50%; transform: translateY(-50%)" aria-hidden="true"></div>
+                  <input id="event-time-start" type="range" min="0" max="1439" step="30" value="0"
+                    class="absolute inset-0 w-full appearance-none" aria-label="Start time (left handle)"
+                    style="z-index: 30" />
+                  <input id="event-time-end" type="range" min="0" max="1439" step="30" value="1439"
+                    class="absolute inset-0 w-full appearance-none" aria-label="End time (right handle)"
+                    style="z-index: 20" />
+                </div>
+              </div>
+            </div>
+            <!-- Price & Deals -->
+            <div class="py-2">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="badge-dollar-sign" class="h-5 w-5 text-[rgb(34,34,34)]"></i>
+                  <h4 class="font-semibold text-lg">Price & Deals</h4>
+                </div>
+              </div>
+              <div id="section-price-deals" class="pb-3 space-y-4">
+                <div>
+                  <div id="daily-free-members-note" class="hidden text-sm text-gray-700">
+                    Free for members
+                  </div>
+                  <h5 class="text-sm font-medium">Show Prices For:</h5>
+                  <div class="mt-2 flex flex-nowrap gap-2 overflow-x-auto">
+                    <label class="cursor-pointer">
+                      <input type="radio" name="price-type" class="filter-input sr-only peer" id="price-member"
+                        data-name="Member" />
+                      <span
+                        class="inline-block whitespace-nowrap px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Member</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="radio" name="price-type" class="filter-input sr-only peer" id="price-nonmember"
+                        data-name="Non-Member" />
+                      <span
+                        class="inline-block whitespace-nowrap px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Free
+                        agent</span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="radio" name="price-type" class="filter-input sr-only peer" id="price-team"
+                        data-name="Team" />
+                      <span
+                        class="inline-block whitespace-nowrap px-3 py-1.5 rounded-full border border-[#818494] text-sm text-black peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">Team</span>
+                    </label>
+                  </div>
+                </div>
+                <div id="price-slider-container" class="hidden">
+                  <input id="price-range" type="range" min="0" max="100" step="25" value="100" class="w-full"
+                    aria-labelledby="price-range-label" />
+                  <div class="flex justify-between text-sm text-gray-600 mt-2">
+                    <span id="price-range-min">$0</span>
+                    <span id="price-range-display" aria-live="polite">$0 — $100</span>
+                  </div>
+                </div>
+                <div>
+                  <h5 class="text-sm font-medium">Registration Deals</h5>
+                  <div class="mt-2 space-y-2">
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="deal-discounted"
+                        data-name="Discounted Events" />
+                      <span class="ml-2 text-sm">Discounted Events</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="deal-earlybird"
+                        data-name="Early Bird Pricing" />
+                      <span class="ml-2 text-sm">Early Bird Pricing</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="deal-volopassfree"
+                        data-name="Free for Volo Pass Members" />
+                      <span class="ml-2 text-sm">Free for Volo Pass Members</span></label>
+                  </div>
+                  <!-- Volo Pass CTA moved here -->
+                  <div
+                    class="mt-4 py-2 rounded-2xl overflow-hidden flex flex-col bg-[#0034DD] text-white border border-[#0034DD] hidden"
+                    aria-hidden="true">
+                    <div class="p-4 text-center">
+                      <h3 class="font-extrabold uppercase tracking-tight text-[1.5rem] leading-tight">
+                        Play More, Pay Less
+                      </h3>
+                      <p class="mt-1 text-xs text-blue-50">
+                        Score deals on leagues, pickup games, member exclusive
+                        events, and more.
+                      </p>
+                    </div>
+                    <div class="text-center px-3 pb-5">
+                      <a href="#"
+                        class="inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-bold border border-[#c7ff10] bg-[#c7ff10] text-black hover:brightness-95 transition">BECOME
+                        A VOLO PASS MEMBER</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Location (moved above Program Highlights) -->
+            <div class="py-2">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="map-pin" class="h-5 w-5 text-[rgb(34,34,34)]"></i>
+                  <h4 class="font-semibold text-lg">Location</h4>
+                </div>
+              </div>
+              <div id="section-location" class="pb-3 space-y-4">
+                <div>
+                  <h5 class="text-sm font-medium">Venues</h5>
+                  <div class="relative mt-2">
+                    <i data-lucide="search"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[rgb(34,34,34)] pointer-events-none"></i>
+                    <input id="venue-search-input" type="text" class="w-full border rounded-xl px-2 py-3 pl-10"
+                      placeholder="Search venue name" aria-label="Search venue name" />
+                  </div>
+                  <div id="venue-list" class="mt-2 space-y-2"></div>
+                </div>
+                <div>
+                  <h5 class="text-sm font-medium">Neighborhood</h5>
+                  <div class="relative mt-2">
+                    <i data-lucide="search"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[rgb(34,34,34)] pointer-events-none"></i>
+                    <input id="neighborhood-search-input" type="text" class="w-full border rounded-xl px-2 py-3 pl-10"
+                      placeholder="Search neighborhood" aria-label="Search neighborhood" />
+                  </div>
+                  <div id="neighborhood-list" class="mt-2 space-y-2"></div>
+                </div>
+              </div>
+            </div>
+            <!-- Program Highlights -->
+            <div class="py-2">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="sparkles" class="h-5 w-5 text-[rgb(34,34,34)]"></i>
+                  <h4 class="font-semibold text-lg">Program Highlights</h4>
+                </div>
+              </div>
+              <div id="section-highlights" class="pb-3 space-y-2">
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-bar-site"
+                    data-name="Bar on Site" />
+                  <span class="ml-2 text-sm">Bar on Site</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-bar-tab"
+                    data-name="Bar Tab Challenge" />
+                  <span class="ml-2 text-sm">Bar Tab Challenge</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-city-champs"
+                    data-name="City Championship" />
+                  <span class="ml-2 text-sm">City Championship</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-club-volo"
+                    data-name="Club Volo Tournament Series" />
+                  <span class="ml-2 text-sm">Club Volo Tournament Series</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-concert"
+                    data-name="Concert" />
+                  <span class="ml-2 text-sm">Concert</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-dj"
+                    data-name="DJ at the Bar" />
+                  <span class="ml-2 text-sm">DJ at the Bar</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-flipcup"
+                    data-name="Flip Cup Counts" />
+                  <span class="ml-2 text-sm">Flip Cup Counts</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-free-pickup"
+                    data-name="Free Pickup" />
+                  <span class="ml-2 text-sm">Free Pickup</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-glow"
+                    data-name="GLOW" />
+                  <span class="ml-2 text-sm">GLOW</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-happy-hour"
+                    data-name="Happy Hour" />
+                  <span class="ml-2 text-sm">Happy Hour</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-happy-hour-league"
+                    data-name="Happy Hour League" />
+                  <span class="ml-2 text-sm">Happy Hour League</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-player-appreciation"
+                    data-name="Player Appreciation" />
+                  <span class="ml-2 text-sm">Player Appreciation</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-player-party"
+                    data-name="Player Party" />
+                  <span class="ml-2 text-sm">Player Party</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-pro-sport"
+                    data-name="Professional Sporting Event" />
+                  <span class="ml-2 text-sm">Professional Sporting Event</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-singles"
+                    data-name="Singles Events (Volo Solo)" />
+                  <span class="ml-2 text-sm">Singles Events (Volo Solo)</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-tailgates"
+                    data-name="Tailgates" />
+                  <span class="ml-2 text-sm">Tailgates</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-volekids"
+                    data-name="Volo Kids Fundraiser" />
+                  <span class="ml-2 text-sm">Volo Kids Fundraiser</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-watch-party"
+                    data-name="Watch Party" />
+                  <span class="ml-2 text-sm">Watch Party</span></label>
+                <label class="flex items-center"><input type="checkbox" class="filter-input" id="hl-waterfront"
+                    data-name="Waterfront View" />
+                  <span class="ml-2 text-sm">Waterfront View</span></label>
+              </div>
+            </div>
+            <!-- Player & Team Type -->
+            <div class="py-2">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="users" class="h-5 w-5 text-[rgb(34,34,34)]"></i>
+                  <h4 class="font-semibold text-lg">Player & Team Type</h4>
+                </div>
+              </div>
+              <div id="section-player-team" class="pb-3 space-y-4">
+                <div>
+                  <h5 class="text-sm font-semibold">Team Composition</h5>
+                  <div class="mt-2 grid grid-cols-2 gap-3">
+                    <!-- Coed -->
+                    <label class="block cursor-pointer">
+                      <input type="checkbox" class="sr-only peer filter-input" id="comp-coed" data-name="Coed" />
+                      <div
+                        class="rounded-xl border border-gray-300 p-4 text-center transition peer-checked:border-blue-600 peer-checked:bg-blue-50">
+                        <i data-lucide="users" class="mx-auto h-6 w-6 text-gray-500 peer-checked:text-blue-600"></i>
+                        <div class="mt-2 text-sm font-medium text-gray-800 peer-checked:text-blue-700">
+                          Coed
+                        </div>
+                      </div>
+                    </label>
+                    <!-- Men's -->
+                    <label class="block cursor-pointer">
+                      <input type="checkbox" class="sr-only peer filter-input" id="comp-mens" data-name="Men's" />
+                      <div
+                        class="rounded-xl border border-gray-300 p-4 text-center transition peer-checked:border-blue-600 peer-checked:bg-blue-50">
+                        <i data-lucide="mars" class="mx-auto h-6 w-6 text-gray-500 peer-checked:text-blue-600"></i>
+                        <div class="mt-2 text-sm font-medium text-gray-800 peer-checked:text-blue-700">
+                          Men's
+                        </div>
+                      </div>
+                    </label>
+                    <!-- Open -->
+                    <label class="block cursor-pointer">
+                      <input type="checkbox" class="sr-only peer filter-input" id="comp-open" data-name="Open" />
+                      <div
+                        class="rounded-xl border border-gray-300 p-4 text-center transition peer-checked:border-blue-600 peer-checked:bg-blue-50">
+                        <i data-lucide="circle" class="mx-auto h-6 w-6 text-gray-500 peer-checked:text-blue-600"></i>
+                        <div class="mt-2 text-sm font-medium text-gray-800 peer-checked:text-blue-700">
+                          Open
+                        </div>
+                      </div>
+                    </label>
+                    <!-- Women's -->
+                    <label class="block cursor-pointer">
+                      <input type="checkbox" class="sr-only peer filter-input" id="comp-womens" data-name="Women's" />
+                      <div
+                        class="rounded-xl border border-gray-300 p-4 text-center transition peer-checked:border-blue-600 peer-checked:bg-blue-50">
+                        <i data-lucide="venus" class="mx-auto h-6 w-6 text-gray-500 peer-checked:text-blue-600"></i>
+                        <div class="mt-2 text-sm font-medium text-gray-800 peer-checked:text-blue-700">
+                          Women's
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                  <p class="mt-2 text-xs text-gray-500">
+                    Coed has gender specific roster requirements Open does
+                    not.
+                  </p>
+                </div>
+                <!-- Move Skill Level under Team Composition -->
+                <div>
+                  <h5 class="text-sm font-semibold">Skill Level</h5>
+                  <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="space-y-2">
+                      <label class="flex items-center"><input type="checkbox" class="filter-input"
+                          id="skill-competitive" data-name="Competitive" />
+                        <span class="ml-2 text-sm">Competitive</span></label>
+                      <label class="flex items-center"><input type="checkbox" class="filter-input"
+                          id="skill-intermediate" data-name="Intermediate" />
+                        <span class="ml-2 text-sm">Intermediate</span></label>
+                    </div>
+                    <div class="space-y-2">
+                      <label class="flex items-center"><input type="checkbox" class="filter-input"
+                          id="skill-recreational" data-name="Recreational" />
+                        <span class="ml-2 text-sm">Recreational</span></label>
+                      <label class="flex items-center"><input type="checkbox" class="filter-input" id="skill-beginner"
+                          data-name="Social/Beginner" />
+                        <span class="ml-2 text-sm">Social/Beginner</span></label>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h5 class="text-sm font-semibold">Age Group</h5>
+                    <div class="mt-2 space-y-2">
+                      <label class="flex items-center opacity-50 cursor-not-allowed" aria-disabled="true"><input
+                          type="checkbox" class="filter-input" id="age-35" data-name="35+" disabled />
+                        <span class="ml-2 text-sm">35+</span></label>
+                      <label class="flex items-center opacity-50 cursor-not-allowed" aria-disabled="true"><input
+                          type="checkbox" class="filter-input" id="age-40" data-name="40+" disabled />
+                        <span class="ml-2 text-sm">40+</span></label>
+                      <label class="flex items-center opacity-50 cursor-not-allowed" aria-disabled="true"><input
+                          type="checkbox" class="filter-input" id="age-50" data-name="50+" disabled />
+                        <span class="ml-2 text-sm">50+</span></label>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 class="text-sm font-semibold">Community</h5>
+                    <div class="mt-2 space-y-2">
+                      <label class="flex items-center"><input type="checkbox" class="filter-input" id="comm-lgbtq"
+                          data-name="LGBTQ+" />
+                        <span class="ml-2 text-sm">LGBTQ+</span></label>
+                      <label class="flex items-center"><input type="checkbox" class="filter-input" id="comm-singles"
+                          data-name="Singles (Volo Solo)" />
+                        <span class="ml-2 text-sm">Singles (Volo Solo)</span></label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Program Details -->
+            <div class="py-2">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="file-text" class="h-5 w-5 text-[rgb(34,34,34)]"></i>
+                  <h4 class="font-semibold text-lg">Program Details</h4>
+                </div>
+                <button type="button"
+                  class="group inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100"
+                  data-collapse-toggle="#section-program-details">
+                  <i data-lucide="chevron-down"
+                    class="h-4 w-4 text-gray-600 group-data-[open=true]:rotate-180 transition-transform"></i>
+                </button>
+              </div>
+              <div id="section-program-details" class="pb-3 space-y-4 hidden" data-collapsible>
+                <div>
+                  <h5 class="text-sm font-medium">Style of Play</h5>
+                  <div class="mt-2 space-y-2">
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-2games"
+                        data-name="2 Games Per Night" />
+                      <span class="ml-2 text-sm">2 Games Per Night</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-playoffs"
+                        data-name="All Teams Make Playoffs" />
+                      <span class="ml-2 text-sm">All Teams Make Playoffs</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-chicago"
+                        data-name="Chicago Style" />
+                      <span class="ml-2 text-sm">Chicago Style</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-cupinhand"
+                        data-name="Cup In Hand" />
+                      <span class="ml-2 text-sm">Cup In Hand</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-doubleheader"
+                        data-name="Doubleheader" />
+                      <span class="ml-2 text-sm">Doubleheader</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-glow"
+                        data-name="Glow" />
+                      <span class="ml-2 text-sm">Glow</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-glowflip"
+                        data-name="Glow + Flip Cup" />
+                      <span class="ml-2 text-sm">Glow + Flip Cup</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-ladder"
+                        data-name="Ladder League" />
+                      <span class="ml-2 text-sm">Ladder League</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-openplay"
+                        data-name="Open Play" />
+                      <span class="ml-2 text-sm">Open Play</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-partyleague"
+                        data-name="Party League" />
+                      <span class="ml-2 text-sm">Party League</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input"
+                        id="style-partypickleball" data-name="Party Pickleball" />
+                      <span class="ml-2 text-sm">Party Pickleball</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-traditional"
+                        data-name="Traditional" />
+                      <span class="ml-2 text-sm">Traditional</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="style-triplethreat"
+                        data-name="Triple Threat" />
+                      <span class="ml-2 text-sm">Triple Threat</span></label>
+                  </div>
+                </div>
+                <div>
+                  <h5 class="text-sm font-medium">Format</h5>
+                  <div id="format-list" class="mt-2 space-y-2">
+                    <!-- Dynamically populated NvN options (e.g., 7v7, 5v5) -->
+                  </div>
+                </div>
+                <div>
+                  <h5 class="text-sm font-medium">Surface Type</h5>
+                  <div class="mt-2 space-y-2">
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="surface-beach"
+                        data-name="Beach/Sand" />
+                      <span class="ml-2 text-sm">Beach/Sand</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="surface-grass"
+                        data-name="Grass" />
+                      <span class="ml-2 text-sm">Grass</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="surface-indoor"
+                        data-name="Indoor" />
+                      <span class="ml-2 text-sm">Indoor</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="surface-outdoor"
+                        data-name="Outdoor" />
+                      <span class="ml-2 text-sm">Outdoor</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="surface-turf"
+                        data-name="Turf" />
+                      <span class="ml-2 text-sm">Turf</span></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Amenities & Perks -->
+            <div class="py-2">
+              <div class="w-full flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="gift" class="h-5 w-5 text-[rgb(34,34,34)]"></i>
+                  <h4 class="font-semibold text-lg">Amenities & Perks</h4>
+                </div>
+                <button type="button"
+                  class="group inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100"
+                  data-collapse-toggle="#section-amenities">
+                  <i data-lucide="chevron-down"
+                    class="h-4 w-4 text-gray-600 group-data-[open=true]:rotate-180 transition-transform"></i>
+                </button>
+              </div>
+              <div id="section-amenities" class="pb-3 space-y-4 hidden" data-collapsible>
+                <div>
+                  <h5 class="text-sm font-medium">Social & Bar Scene</h5>
+                  <div class="mt-2 space-y-2">
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-bar-site"
+                        data-name="Bar on Site" />
+                      <span class="ml-2 text-sm">Bar on Site</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-bogo"
+                        data-name="BOGO Pitchers" />
+                      <span class="ml-2 text-sm">BOGO Pitchers</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-byoc"
+                        data-name="Bring Your Own Case (no glass)" />
+                      <span class="ml-2 text-sm">Bring Your Own Case (no glass)</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-byob"
+                        data-name="BYOB (Bring Your Own Beer)" />
+                      <span class="ml-2 text-sm">BYOB (Bring Your Own Beer)</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-host"
+                        data-name="Dedicated Social Host" />
+                      <span class="ml-2 text-sm">Dedicated Social Host</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-dj"
+                        data-name="DJ at the Bar" />
+                      <span class="ml-2 text-sm">DJ at the Bar</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-deals"
+                        data-name="Includes Happy Hour / Bar Deals" />
+                      <span class="ml-2 text-sm">Includes Happy Hour / Bar Deals</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-sponsor"
+                        data-name="Sponsor Bar" />
+                      <span class="ml-2 text-sm">Sponsor Bar</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-events"
+                        data-name="Special Events" />
+                      <span class="ml-2 text-sm">Special Events</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-exclusive"
+                        data-name="Volo Exclusive Bar Deals" />
+                      <span class="ml-2 text-sm">Volo Exclusive Bar Deals</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="soc-walkbar"
+                        data-name="Walking Distance to Bar" />
+                      <span class="ml-2 text-sm">Walking Distance to Bar</span></label>
+                  </div>
+                </div>
+                <div>
+                  <h5 class="text-sm font-medium">Program Perks</h5>
+                  <div class="mt-2 space-y-2">
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="perk-refs"
+                        data-name="Includes Referees" />
+                      <span class="ml-2 text-sm">Includes Referees</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="perk-tshirt"
+                        data-name="T-Shirt Included" />
+                      <span class="ml-2 text-sm">T-Shirt Included</span></label>
+                  </div>
+                </div>
+                <div>
+                  <h5 class="text-sm font-medium">Venue Features</h5>
+                  <div class="mt-2 space-y-2">
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="venue-dogs"
+                        data-name="Dogs Welcome" />
+                      <span class="ml-2 text-sm">Dogs Welcome</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="venue-lights"
+                        data-name="Lights" />
+                      <span class="ml-2 text-sm">Lights</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="venue-transit"
+                        data-name="Near Public Transportation" />
+                      <span class="ml-2 text-sm">Near Public Transportation</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="venue-new"
+                        data-name="New Facility" />
+                      <span class="ml-2 text-sm">New Facility</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="venue-parking"
+                        data-name="On-Site Parking" />
+                      <span class="ml-2 text-sm">On-Site Parking</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="venue-popular"
+                        data-name="Popular Venue" />
+                      <span class="ml-2 text-sm">Popular Venue</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input" id="venue-tables"
+                        data-name="Reserved Tables" />
+                      <span class="ml-2 text-sm">Reserved Tables</span></label>
+                    <label class="flex items-center"><input type="checkbox" class="filter-input"
+                        id="venue-streetparking" data-name="Street Parking" />
+                      <span class="ml-2 text-sm">Street Parking</span></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Column: Results -->
+        <section class="lg:col-span-3">
+          <!-- Search Bar Section (moved here above results) -->
+          <!-- HERO SECTION (Grafted from Variant B) -->
+          <section id="hero-variant-b" class="mb-6">
+            <!-- Level 1: Macro Tabs -->
+            <div class="flex items-center gap-6 border-b border-gray-200 w-full mb-4 relative z-50">
+              <button id="tab-sports"
+                class="flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-bold text-gray-900">
+                <img
+                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/sports-icon.png"
+                  class="h-8 w-8 object-contain">
+                <span>Sports</span>
+              </button>
+              <button id="tab-events"
+                class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
+                <img
+                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/events-icon.png"
+                  class="h-8 w-8 object-contain">
+                <span>Events</span>
+              </button>
+              <button id="tab-fitness"
+                class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
+                <img
+                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/fitness-icon.png"
+                  class="h-8 w-8 object-contain">
+                <span>Fitness</span>
+              </button>
+              <button id="tab-volunteer"
+                class="flex items-center gap-3 opacity-100 hover:opacity-100 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-normal text-gray-900">
+                <img
+                  src="https://volosports.com/img/unsafe/format:webp/plain/https://volosports-public.s3.us-west-1.amazonaws.com/common/icons/volunteer-icon.png"
+                  class="h-8 w-8 object-contain">
+                <span>Volunteer</span>
+              </button>
+            </div>
+
+            <!-- Level 2: Sub Nav -->
+            <div id="sub-nav-b" class="bg-[#F2F5FE] mt-4 rounded-full px-[5px] py-[3px] grid grid-cols-4 gap-2 w-full">
+              <button data-scope="leagues"
+                class="w-full flex items-center justify-center py-2 bg-white rounded-full shadow-sm font-semibold text-sm text-black">Leagues</button>
+              <button data-scope="daily"
+                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Daily
+                Sports</button>
+              <button data-scope="tournaments"
+                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Tournaments</button>
+              <button id="btn-court-rentals" data-scope="Private Rentals"
+                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Court
+                Rentals</button>
+            </div>
+
+            <!-- Level 3: Dropdown Pills & City -->
+            <div class="flex justify-between items-center mt-6 px-1 relative z-50">
+              <div class="flex items-center gap-3">
+                <!-- Sports Pill -->
+                <div class="relative group">
+                  <button id="pill-sports"
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white flex items-center gap-2 text-sm font-bold hover:border-black transition">
+                    Sports
+                    <i data-lucide="chevron-down" class="h-4 w-4"></i>
+                  </button>
+                </div>
+                <!-- Days Pill -->
+                <div class="relative group">
+                  <button id="pill-days"
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white flex items-center gap-2 text-sm font-bold hover:border-black transition">
+                    Days
+                    <i data-lucide="chevron-down" class="h-4 w-4"></i>
+                  </button>
+                </div>
+                <!-- Neighborhood Pill -->
+                <div class="relative group">
+                  <button id="pill-hood"
+                    class="px-4 py-2 rounded-full border border-slate-300 bg-white flex items-center gap-2 text-sm font-bold hover:border-black transition">
+                    Neighborhood
+                    <i data-lucide="chevron-down" class="h-4 w-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- City Selector -->
+              <div class="flex items-center gap-1 font-bold text-lg text-[#222]">
+                Sports in <a href="#"
+                  class="text-[#013AF5] underline decoration-2 underline-offset-4 decoration-dotted hover:decoration-solid">Baltimore</a>
+              </div>
+            </div>
+
+            <!-- DROPDOWN PANELS (Hidden by default) -->
+            <div class="relative max-w-[1400px] mx-auto px-1 mt-2 z-[60]">
+              <!-- Sports Dropdown -->
+              <div id="dropdown-sports"
+                class="hidden absolute top-0 left-0 bg-white border border-slate-200 shadow-xl rounded-2xl z-[100] w-[660px]">
+                <!-- Reuse the existing ID expected by buildSportsGrid() -->
+                <div id="dropdown-sports-grid" class="p-6"></div>
+
+                <!-- Footer -->
+                <div class="border-t border-slate-100 p-4 flex items-center justify-between bg-white rounded-b-md">
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="inline-flex items-center gap-1 bg-orange-50 text-orange-600 text-xs font-semibold px-2 py-1 rounded-full">
+                      <i data-lucide="flame" class="w-3 h-3 fill-orange-600"></i>
+                      Popular
+                    </div>
+                    <span id="sports-selection-count" class="text-sm text-gray-600">0 selected</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button id="sports-clear-btn" type="button"
+                      class="text-sm text-gray-500 hover:text-gray-800 font-medium">Clear</button>
+                    <button id="sports-done-btn" type="button"
+                      class="bg-blue-600 text-white text-sm font-semibold px-6 py-2 rounded-full hover:bg-blue-700 transition-colors">Done</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Days Dropdown -->
+              <div id="dropdown-days"
+                class="hidden absolute top-0 left-32 bg-white border border-slate-200 shadow-xl rounded-2xl p-6 z-[100] w-[380px]">
+                <h5 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">Select Days</h5>
+                <div class="flex flex-row justify-between gap-1 w-full" id="days-container-b">
+                  <!-- Placeholder for days logic if needed, or we can wire this to sidebar inputs later -->
+                  <p class="text-sm text-gray-500">Day filtering is currently synced with the sidebar.</p>
+                </div>
+              </div>
+
+              <!-- Neighborhood Dropdown -->
+              <div id="dropdown-neighborhood"
+                class="hidden absolute top-0 left-64 bg-white border border-slate-200 shadow-xl rounded-2xl p-6 z-[100] w-[300px]">
+                <h5 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">Select Neighborhood</h5>
+                <p class="text-sm text-gray-500">Neighborhood filtering is synced with the sidebar.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- LOGIC BRIDGE: Hidden Original Filters -->
+          <div id="hidden-logic-bridge" class="hidden">
+            <!-- Original inputs required by A's logic -->
+            <section id="search-bar-section" class="mb-6">
+              <!-- Keep IDs intact so getElementById works -->
+              <input type="text" id="city" value="Baltimore" />
+              <input type="text" id="activities" /> <!-- Driven by Sub Nav -->
+              <input type="text" id="sports" /> <!-- Driven by Sports Pill -->
+              <button id="desktop-search-btn"></button>
+            </section>
+          </div>
+          <!-- Results heading + filter pills in one row -->
+          <div class="flex flex-wrap items-center gap-2 mb-6">
+            <h2 id="results-heading" class="text-sm font-medium">
+              0 ways to play
+            </h2>
+            <div id="filter-pills-container-list" class="flex flex-wrap gap-2 items-center"></div>
+          </div>
+
+          <!-- Dynamic Activity Cards -->
+          <div id="activity-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"></div>
+          <!-- Pagination -->
+          <div id="pagination-container" class="mt-4 flex flex-wrap items-center gap-2"></div>
+          <!-- Non-matching guidance and results -->
+          <section id="nonmatching-section" class="mt-8 space-y-4 hidden">
+            <!-- Cross-sell banner (moved above guidance) -->
+            <div id="cross-sell-banner" class="hidden mb-4"></div>
+            <div class="text-center">
+              <h3 class="text-base font-semibold text-gray-800">
+                Try removing filters to see more activities
+              </h3>
+              <div id="centered-applied-pills" class="mt-3 flex flex-wrap justify-center gap-2"></div>
+              <div class="mt-2">
+                <button type="button" class="text-sm text-blue-600 hover:underline font-normal"
+                  data-action="remove-all">
+                  Remove all filters
+                </button>
+              </div>
+            </div>
+            <div>
+              <h4 class="text-base font-semibold text-gray-800 mb-2">
+                Activities that don't match all your filters
+              </h4>
+              <div id="nonmatching-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"></div>
+            </div>
+          </section>
+          <!-- Local file loader (fallback for file:// protocol when auto-fetch fails) -->
+          <div id="local-file-loader" class="hidden">
+            <div class="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-yellow-900">
+              <p class="text-sm mb-2">
+                Running without a server detected. Select your leagues.json,
+                tournaments.json, and (optional) daily-sports.json to load
+                data locally:
+              </p>
+              <input id="local-file-input" type="file" accept="application/json,.json,.ndjson,.jsonl" multiple
+                class="text-sm" />
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Full Screen Map View -->
+  <div id="map-view-container" class="hidden">
+    <div id="map-container">
+      <div id="map"></div>
+    </div>
+
+    <!-- Map UI Elements Overlay: allow map interactions except on actual UI -->
+    <div id="map-overlay" class="absolute inset-0 z-[60] pointer-events-none">
+      <!-- Top bar -->
+      <div class="absolute top-0 left-0 right-0 pointer-events-auto">
+        <!-- Search summary bar as secondary nav -->
+        <div class="w-full bg-white border-b border-slate-200 shadow-sm">
+          <div class="px-4 py-2 flex items-center gap-2">
+            <button id="back-to-list-btn" aria-label="Back to list"
+              class="inline-flex items-center gap-2 shrink-0 rounded-full border border-[#0034DD] bg-[#0034DD] text-white text-sm font-semibold px-2 md:px-3 py-1 md:py-1.5 shadow-md hover:bg-[#002ACC] focus:outline-none focus:ring-2 focus:ring-white/70">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+              <span class="hidden md:inline">Back to list</span>
+            </button>
+            <div id="map-search-summary" class="flex-1 min-w-0 text-[16px] text-blue font-medium truncate ml-2">
+              <!-- Filled dynamically: City · Activity · Sports -->
+            </div>
+          </div>
+        </div>
+        <div class="w-full mx-auto relative">
+          <div id="map-topbar" class="relative flex items-center gap-2 p-4">
+            <!-- Filter Pills for map view -->
+            <div id="filter-pills-container-map"
+              class="flex-1 flex flex-nowrap overflow-x-auto no-scrollbar gap-2 items-center w-full md:w-auto pr-1 whitespace-nowrap">
+            </div>
+          </div>
+          <!-- Map filter dropdown panel (shows a filter group's content) -->
+          <div id="map-filter-backdrop" class="hidden fixed inset-0 z-[95] pointer-events-auto"></div>
+          <div id="map-filter-panel"
+            class="hidden fixed md:absolute inset-x-0 bottom-0 md:inset-auto z-[100] pointer-events-auto">
+            <div
+              class="relative bg-white md:inline-block md:w-96 w-full max-h-[75vh] md:max-h-none md:rounded-lg md:border md:border-slate-200 md:shadow-md rounded-t-2xl overflow-hidden">
+              <!-- Mobile drawer handle -->
+              <div class="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 rounded bg-[rgba(32,32,32,0.2)]">
+              </div>
+              <div class="px-3 py-6 md:py-2 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span id="map-filter-panel-icon-wrap" class="inline-flex items-center justify-center">
+                    <!-- icon injected dynamically -->
+                  </span>
+                  <h4 id="map-filter-panel-title" class="font-semibold text-lg"></h4>
+                </div>
+                <button id="map-filter-panel-clear" type="button" class="text-sm text-blue-600 hover:underline">
+                  Clear
+                </button>
+              </div>
+              <div id="map-filter-panel-body" class="p-3 md:max-h-[60vh] max-h-[55vh] overflow-auto"></div>
+              <div class="px-3 py-2 border-t border-slate-200 text-right">
+                <button id="map-filter-panel-done" type="button"
+                  class="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Card on Map -->
+      <div id="map-activity-card-container"
+        class="absolute bottom-0 left-0 right-0 p-4 hidden pointer-events-auto z-30">
+        <div class="w-full max-w-[1600px] mx-auto">
+          <!-- Card content will be injected here by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile floating View in Map button -->
+  <button id="mobile-view-map"
+    class="fixed md:hidden bottom-4 left-1/2 -translate-x-1/2 z-40 rounded-full bg-[#0034DD] text-white px-5 py-3 text-sm font-bold shadow-xl border border-[#0034DD]">
+    View in Map
+  </button>
+
+  <!-- Mobile Filters Overlay -->
+  <div id="mobile-filters-overlay" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0" data-overlay-close></div>
+    <div class="absolute inset-0 bg-white flex flex-col">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="text-base font-semibold">Filters</h3>
+        <button id="mobile-filters-close" class="text-sm text-gray-600">
+          Close
+        </button>
+      </div>
+      <div id="mobile-filters-body" class="flex-1 overflow-y-auto p-0">
+        <!-- filters-form will be moved in here on open -->
+      </div>
+      <div class="border-t border-slate-200 p-3 bg-white">
+        <button id="mobile-filters-done"
+          class="w-full inline-flex items-center justify-center rounded-full px-4 py-3 text-sm font-bold border border-[#0034DD] bg-[#0034DD] text-white hover:bg-[#002ACC]">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./venue-locations.js"></script>
+  <script src="./experience-elevators.js"></script>
+
+  <!-- Inline template for the multi-step Wizard (used when fetch is unavailable, e.g., file://) -->
+  <template id="wizard-template">
+    <div id="wizard-modal" class="fixed inset-0 z-[120] hidden" role="dialog" aria-modal="true"
+      aria-labelledby="wizard-title" data-wizard-mode="multi">
+      <div class="absolute inset-0 bg-black/50" data-wizard-close></div>
+      <div
+        class="relative mx-auto my-6 w-[92%] max-w-2xl rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-300 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="sparkles" class="h-5 w-5 text-blue-600"></i>
+            <h3 id="wizard-title" class="text-lg font-semibold">
+              Find your fun
+            </h3>
+          </div>
+          <button type="button" class="text-gray-500 hover:text-gray-700" data-wizard-close aria-label="Close">
+            <i data-lucide="x" class="h-5 w-5"></i>
+          </button>
+        </div>
+        <div class="p-5">
+          <div id="wizard-steps" class="space-y-6">
+            <section id="wizard-step-1" class="space-y-4" data-step>
+              <div>
+                <p class="text-sm text-gray-600">
+                  Not sure what you’re looking for?
+                </p>
+                <p class="text-base font-semibold text-gray-900">
+                  Hey Baltimore! 🦀 I’m your Volo City Guide. Let’s find your
+                  next game.
+                </p>
+                <p class="text-sm text-gray-700">
+                  What’s the main vibe you’re looking for?
+                </p>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button type="button"
+                  class="rounded-2xl border border-gray-300 p-4 text-left hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  data-choice="goal" data-value="league">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="trophy" class="h-5 w-5 text-yellow-600"></i><span class="font-semibold">Join a team
+                      for a full season</span>
+                  </div>
+                  <p class="mt-1 text-xs text-gray-600">
+                    Multi-week League. Play weekly and chase the trophy. 🏆
+                  </p>
+                </button>
+                <button type="button"
+                  class="rounded-2xl border border-gray-300 p-4 text-left hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  data-choice="goal" data-value="daily">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="zap" class="h-5 w-5 text-orange-600"></i><span class="font-semibold">Just want a
+                      one-time game</span>
+                  </div>
+                  <p class="mt-1 text-xs text-gray-600">
+                    Daily Sports. Drop-in or Pickup on your schedule. ⚡
+                  </p>
+                </button>
+                <button type="button"
+                  class="rounded-2xl border border-gray-300 p-4 text-left hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  data-choice="goal" data-value="tournament">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="flag" class="h-5 w-5 text-blue-700"></i><span class="font-semibold">A single-day
+                      competition</span>
+                  </div>
+                  <p class="mt-1 text-xs text-gray-600">
+                    Tournaments. High energy, winner takes bragging rights. 🥇
+                  </p>
+                </button>
+                <button type="button"
+                  class="rounded-2xl border border-gray-300 p-4 text-left hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  data-choice="goal" data-value="browse">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="compass" class="h-5 w-5 text-gray-700"></i><span class="font-semibold">I’m just
+                      browsing</span>
+                  </div>
+                  <p class="mt-1 text-xs text-gray-600">
+                    We’ll still help you narrow it down. 👟
+                  </p>
+                </button>
+              </div>
+            </section>
+            <section id="wizard-step-2a" class="space-y-3 hidden" data-step>
+              <p class="text-base font-semibold">
+                Awesome! You’re talking about a League 🏆
+              </p>
+              <p class="text-sm text-gray-700">
+                Our most popular option. Sign up solo, with friends, or a full
+                team for a multi-week season. One game a week and playoffs at
+                the end. Sound right?
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="px-3 py-1.5 rounded-full bg-blue-600 text-white text-sm font-semibold"
+                  data-confirm="league">
+                  Yep, let’s find a league!
+                </button>
+                <button type="button" class="px-3 py-1.5 rounded-full border border-gray-300 text-sm" data-goback>
+                  Tell me the other options
+                </button>
+              </div>
+            </section>
+            <section id="wizard-step-2b" class="space-y-3 hidden" data-step>
+              <p class="text-base font-semibold">Got it! Daily Sports ⚡</p>
+              <p class="text-sm text-gray-700">
+                Perfect for a flexible schedule: one-time pickup games,
+                drop-ins, and single events. No season commitment. Is that the
+                one?
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="px-3 py-1.5 rounded-full bg-blue-600 text-white text-sm font-semibold"
+                  data-confirm="daily">
+                  That’s me! Let’s play!
+                </button>
+                <button type="button" class="px-3 py-1.5 rounded-full border border-gray-300 text-sm" data-goback>
+                  What else is there?
+                </button>
+              </div>
+            </section>
+            <section id="wizard-step-2c" class="space-y-3 hidden" data-step>
+              <p class="text-base font-semibold">LFG! Tournament time 🥇</p>
+              <p class="text-sm text-gray-700">
+                Single-day competition with multiple games and high energy.
+                Ready?
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="px-3 py-1.5 rounded-full bg-blue-600 text-white text-sm font-semibold"
+                  data-confirm="tournament">
+                  I’m in! Show me tourneys!
+                </button>
+                <button type="button" class="px-3 py-1.5 rounded-full border border-gray-300 text-sm" data-goback>
+                  Go back
+                </button>
+              </div>
+            </section>
+            <section id="wizard-step-3" class="space-y-3 hidden" data-step>
+              <p class="text-base font-semibold">
+                What do you want to play? 👟
+              </p>
+              <div id="wizard-sports-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+              <p class="text-xs text-gray-500">
+                Tip: You can change this later.
+              </p>
+            </section>
+            <section id="wizard-step-4" class="space-y-4 hidden" data-step>
+              <p class="text-base font-semibold">Dial in the perfect game</p>
+              <p class="text-sm text-gray-700">
+                Tap all the must-haves. You can skip this if you want.
+              </p>
+              <div class="space-y-3" id="wizard-pill-pool">
+                <div>
+                  <p class="text-sm font-semibold mb-1">Skill Level</p>
+                  <div class="flex flex-wrap gap-2" data-pill-group="skill">
+                    <button type="button" class="pill" data-pill="skill" data-value="Social/Beginner">
+                      Super Social
+                    </button>
+                    <button type="button" class="pill" data-pill="skill" data-value="Recreational">
+                      Recreational
+                    </button>
+                    <button type="button" class="pill" data-pill="skill" data-value="Intermediate">
+                      Intermediate
+                    </button>
+                    <button type="button" class="pill" data-pill="skill" data-value="Competitive">
+                      Competitive
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold mb-1">Format</p>
+                  <div class="flex flex-wrap gap-2" data-pill-group="composition">
+                    <button type="button" class="pill" data-pill="composition" data-value="Coed">
+                      Coed
+                    </button>
+                    <button type="button" class="pill" data-pill="composition" data-value="Men's">
+                      Men's
+                    </button>
+                    <button type="button" class="pill" data-pill="composition" data-value="Women's">
+                      Women's
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold mb-1">Day of Week</p>
+                  <div class="flex flex-wrap gap-2" data-pill-group="dow">
+                    <button type="button" class="pill" data-pill="dow" data-value="weekdays">
+                      Weekdays
+                    </button>
+                    <button type="button" class="pill" data-pill="dow" data-value="weekends">
+                      Weekends
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold mb-1">Vibe</p>
+                  <div class="flex flex-wrap gap-2" data-pill-group="vibe">
+                    <button type="button" class="pill" data-pill="vibe" data-value="Bar on Site">
+                      Bar on Site 🍻
+                    </button>
+                    <button type="button" class="pill" data-pill="vibe" data-value="Kid-Friendly">
+                      Kid-Friendly
+                    </button>
+                    <button type="button" class="pill" data-pill="vibe" data-value="Indoor">
+                      Indoors
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <style>
+                .pill {
+                  padding: 0.375rem 0.75rem;
+                  border-radius: 9999px;
+                  border: 1px solid #d1d5db;
+                  font-size: 0.875rem;
+                  line-height: 1.25rem;
+                  color: #374151;
+                  background: #ffffff;
+                }
+
+                .pill[data-selected="true"] {
+                  background: #2563eb;
+                  color: #ffffff;
+                  border-color: #2563eb;
+                }
+              </style>
+            </section>
+            <section id="wizard-step-5" class="space-y-4 hidden" data-step>
+              <div class="space-y-1">
+                <p class="text-base font-semibold">All set!</p>
+                <p id="wizard-summary" class="text-sm text-gray-700"></p>
+              </div>
+              <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <a id="wizard-results-link" href="#"
+                  class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                  target="_self">See your custom results</a>
+                <button type="button" class="text-sm text-blue-700 underline" data-wizard-restart>
+                  Want to start over?
+                </button>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="px-5 py-3 border-t border-slate-300 flex items-center justify-between bg-white">
+          <button type="button" class="px-3 py-1.5 rounded-md text-sm text-gray-700 hover:bg-gray-50" data-wizard-back
+            disabled>
+            Back
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button"
+              class="px-3 py-1.5 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+              data-wizard-close>
+              Cancel
+            </button>
+            <button type="button" class="px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm font-semibold"
+              data-wizard-next>
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Volo Pass Modal -->
+  <div id="volo-pass-backdrop" class="fixed inset-0 bg-black/50 z-50 hidden"></div>
+  <div id="volo-pass-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="bg-[#0034DD] text-white p-6">
+        <h3 class="text-2xl font-extrabold tracking-tight uppercase">
+          Play More, Pay Less
+        </h3>
+        <p class="mt-2 text-blue-50 text-sm">
+          Become a Volo Pass member for insider access to Volo’s nationally
+          recognized programming.
+        </p>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-gray-800 text-sm leading-relaxed">
+          Play unlimited pickups, drop-ins, clinics, and tournaments. Get
+          league discounts and access to exclusive member events—all with one
+          flexible membership.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="rounded-xl border border-slate-300 p-3">
+            <div class="font-semibold">Unlimited Drop-ins</div>
+            <p class="text-sm text-gray-600 mt-1">
+              Grab a spot when a team needs a sub—enjoy all the fun, none of
+              the commitment.
+            </p>
+          </div>
+          <div class="rounded-xl border border-slate-300 p-3">
+            <div class="font-semibold">Unlimited Pickups</div>
+            <p class="text-sm text-gray-600 mt-1">
+              Join pickup games on your schedule. Choose your skill level,
+              show up, and play.
+            </p>
+          </div>
+          <div class="rounded-xl border border-slate-300 p-3">
+            <div class="font-semibold">League Discounts</div>
+            <p class="text-sm text-gray-600 mt-1">
+              Save $10–$50 on leagues when you register as a Volo Pass member.
+            </p>
+          </div>
+          <div class="rounded-xl border border-slate-300 p-3">
+            <div class="font-semibold">Member-Only Events</div>
+            <p class="text-sm text-gray-600 mt-1">
+              Exclusive parties, watch events, and more—just for members.
+            </p>
+          </div>
+        </div>
+        <div class="pt-2 flex items-center justify-between gap-3">
+          <a href="#" class="text-sm text-gray-600 hover:text-gray-900 underline"
+            data-action="close-volo-pass-modal">Maybe later</a>
+          <a href="#"
+            class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-bold border border-[#c7ff10] bg-[#c7ff10] text-black hover:brightness-95 transition">BECOME
+            A VOLO PASS MEMBER</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script>
+  // --- VARIANT C BRIDGE SCRIPT ---
+  // This script wires the new "Variant B" header UI to the existing "Variant A" filtering logic.
+  // It works by programmatically updating the now-hidden inputs and dispatching events.
+
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("Variant C Bridge: Initializing...");
+
+    // 1. Elements
+    const hiddenActivityInput = document.getElementById("activities"); // The A-logic driver
+    const hiddenSportsInput = document.getElementById("sports");       // The A-logic driver
+
+    const subNavButtons = document.querySelectorAll("#sub-nav-b button");
+
+    // 2. Wire Sub-Nav Buttons (Leagues, Daily, Rentals)
+    subNavButtons.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        // Visual: Active State
+        subNavButtons.forEach(b => {
+          b.classList.remove("bg-white", "text-black", "shadow-sm");
+          b.classList.add("text-gray-500", "hover:text-black", "hover:bg-white/50");
+        });
+        e.currentTarget.classList.remove("text-gray-500", "hover:text-black", "hover:bg-white/50");
+        e.currentTarget.classList.add("bg-white", "text-black", "shadow-sm");
+
+        // Logic: Update Hidden Input
+        const rawScope = e.currentTarget.dataset.scope;
+        let targetValue = "";
+
+        // Map B-scope to A-value
+        if (rawScope === "Private Rentals") targetValue = "Private Rentals"; // Matches JSON
+        else if (rawScope === "leagues") targetValue = "Leagues";
+        else if (rawScope === "daily") targetValue = "Daily Sports";
+        else if (rawScope === "tournaments") targetValue = "Tournaments";
+        else targetValue = rawScope;
+
+        console.log(`Bridge: Switching scope to '${targetValue}'`);
+
+        if (hiddenActivityInput) {
+          hiddenActivityInput.value = targetValue;
+          // Dispatch standard input event so A's logic picks it up
+          hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
+          hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true })); // Just in case
+        }
+      });
+    });
+
+    // 3. Initial State: Default to "Leagues"
+    if (hiddenActivityInput && !hiddenActivityInput.value) {
+      console.log("Bridge: Setting initial default to 'Leagues'");
+      hiddenActivityInput.value = "Leagues";
+    }
+
+    // 4. Wire Macro Tabs (Sports, Events, Fitness, Volunteer)
+    // These are the top-level "Level 1" tabs. 
+    // We map them to specific Activity types. if data exists, they will show.
+    const macroTabs = [
+      { id: "tab-sports", value: "Leagues" }, // verified default
+      { id: "tab-events", value: "Events" },
+      { id: "tab-fitness", value: "Fitness" },
+      { id: "tab-volunteer", value: "Volunteer" }
+    ];
+
+    macroTabs.forEach(tabDef => {
+      const btn = document.getElementById(tabDef.id);
+      if (!btn) {
+        console.warn(`Bridge: Button ${tabDef.id} not found.`);
+        return;
+      }
+
+      btn.addEventListener("click", (e) => {
+        console.log(`Bridge: Clicked ${tabDef.id}, mapping to value: ${tabDef.value}`);
+
+        // Visuals: Active State (Simple bottom border)
+        macroTabs.forEach(t => {
+          const b = document.getElementById(t.id);
+          if (b) b.classList.remove("border-b-4", "border-[#0034DD]", "font-bold");
+        });
+        e.currentTarget.classList.add("border-b-4", "border-[#0034DD]", "font-bold");
+
+        // Logic: Update Hidden Input
+        if (hiddenActivityInput) {
+          hiddenActivityInput.value = tabDef.value;
+          // Dispatch events to trigger A's filtering
+          hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
+          hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // Debugging
+          updateResultsHeading(); // Force heading update immediately to see reaction
+        } else {
+          console.error("Bridge: Hidden #activities input not found!");
+        }
+      });
+    });
+
+    // Set "Sports" as visually active by default (handled in HTML now, but keeping for safety)
+    const defaultTab = document.getElementById("tab-sports");
+    if (defaultTab) defaultTab.classList.add("border-b-4", "border-[#0034DD]", "font-bold");
+
+    // 5. Wire Dropdown Pills (Sports, Days, Neighborhood)
+    const pillDropdownMap = {
+      "pill-sports": "dropdown-sports",
+      "pill-days": "dropdown-days",
+      "pill-hood": "dropdown-neighborhood"
+    };
+
+    // Close all dropdowns helper
+    function closeAllDropdowns() {
+      Object.values(pillDropdownMap).forEach(id => {
+        const d = document.getElementById(id);
+        if (d) d.classList.add("hidden");
+      });
+    }
+
+    Object.keys(pillDropdownMap).forEach(pillId => {
+      const btn = document.getElementById(pillId);
+      const dropId = pillDropdownMap[pillId];
+      const drop = document.getElementById(dropId);
+
+      if (!btn || !drop) return;
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isHidden = drop.classList.contains("hidden");
+        closeAllDropdowns(); // Close others first
+        if (isHidden) {
+          drop.classList.remove("hidden");
+        } else {
+          drop.classList.add("hidden");
+        }
+      });
+
+      // Prevent closing when clicking inside the dropdown
+      drop.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+    });
+
+    // Close on click outside
+    document.addEventListener("click", () => {
+      closeAllDropdowns();
+    });
+
+    // Wire "Done" button in Sports dropdown
+    const sportsDoneBtn = document.getElementById("sports-done-btn");
+    if (sportsDoneBtn) {
+      sportsDoneBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // prevent re-opening if bubbling
+        const d = document.getElementById("dropdown-sports");
+        if (d) d.classList.add("hidden");
+      });
+    }
+
+    // Override global toggle so existing logic works with new ID
+    window.toggleSportsDropdown = function (forceState) {
+      const d = document.getElementById("dropdown-sports");
+      if (!d) return;
+      if (typeof forceState === "boolean") {
+        if (forceState) d.classList.remove("hidden");
+        else d.classList.add("hidden");
+      } else {
+        d.classList.toggle("hidden");
+      }
+    };
+
+    // 6. Init Days Dropdown (Syncs with hidden #day-mon etc)
+    function initDaysDropdown() {
+      const container = document.getElementById("days-container-b");
+      if (!container) return;
+      container.innerHTML = ""; // Clear placeholder
+
+      const days = [
+        { id: "day-mon", label: "Mon" },
+        { id: "day-tue", label: "Tue" },
+        { id: "day-wed", label: "Wed" },
+        { id: "day-thu", label: "Thu" },
+        { id: "day-fri", label: "Fri" },
+        { id: "day-sat", label: "Sat" },
+        { id: "day-sun", label: "Sun" }
+      ];
+
+      // Create grid container
+      const grid = document.createElement("div");
+      grid.className = "grid grid-cols-4 gap-2 w-full";
+
+      days.forEach(d => {
+        // Find original hidden input
+        const originalInput = document.getElementById(d.id);
+
+        const label = document.createElement("label");
+        label.className = "flex items-center gap-2 cursor-pointer";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.className = "rounded border-gray-300 text-blue-600 focus:ring-blue-500";
+
+        // Sync initial state
+        if (originalInput && originalInput.checked) {
+          cb.checked = true;
+        }
+
+        const span = document.createElement("span");
+        span.className = "text-sm text-gray-700 font-medium";
+        span.textContent = d.label;
+
+        label.appendChild(cb);
+        label.appendChild(span);
+        grid.appendChild(label);
+
+        // Sync Logic: Click New -> Update Original -> Trigger Render
+        cb.addEventListener("change", (e) => {
+          if (originalInput) {
+            originalInput.checked = e.target.checked;
+            // Dispatch change event on original so any listeners fire
+            originalInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+            if (typeof renderActivities === 'function') {
+              renderActivities();
+              updateResultsHeading();
+            }
+          }
+        });
+
+        // Optional: Listen for changes on original to update new (if external logic changes it)
+        if (originalInput) {
+          originalInput.addEventListener("change", () => {
+            cb.checked = originalInput.checked;
+          });
+        }
+      });
+
+      container.appendChild(grid);
+    }
+    initDaysDropdown();
+
+    // 7. Init Neighborhood Dropdown (Scrapes existing hidden list)
+    function initNeighborhoodDropdown() {
+      const drop = document.getElementById("dropdown-neighborhood");
+      if (!drop) return;
+
+      // Clear placeholder content (keeping title if we want, or rebuilding it)
+      drop.innerHTML = `
+        <h5 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">Select Neighborhood</h5>
+        <div id="hood-grid-b" class="grid grid-cols-1 gap-y-2 max-h-60 overflow-y-auto"></div>
+      `;
+
+      const grid = document.getElementById("hood-grid-b");
+      const hiddenList = document.getElementById("neighborhood-list");
+
+      if (!hiddenList) {
+        grid.innerHTML = "<p class='text-sm text-gray-400'>No neighborhoods found.</p>";
+        return;
+      }
+
+      // Find all checkbox inputs in the original list
+      const originalInputs = hiddenList.querySelectorAll("input[type='checkbox']");
+
+      if (originalInputs.length === 0) {
+        // If data isn't loaded yet, this might be empty. 
+        grid.innerHTML = "<p class='text-sm text-gray-400'>Load data to see neighborhoods.</p>";
+        return;
+      }
+
+      originalInputs.forEach(inp => {
+        const name = inp.dataset.name || inp.id; // Fallback
+
+        const label = document.createElement("label");
+        label.className = "flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.className = "rounded border-gray-300 text-blue-600 focus:ring-blue-500";
+
+        if (inp.checked) cb.checked = true;
+
+        const span = document.createElement("span");
+        span.className = "text-sm text-gray-700";
+        span.textContent = name;
+
+        label.appendChild(cb);
+        label.appendChild(span);
+        grid.appendChild(label);
+
+        // Sync Logic
+        cb.addEventListener("change", (e) => {
+          inp.checked = e.target.checked;
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+          if (typeof renderActivities === 'function') {
+            renderActivities();
+            updateResultsHeading();
+          }
+        });
+
+        // Inverse Sync
+        inp.addEventListener("change", () => {
+          cb.checked = inp.checked;
+        });
+      });
+    }
+
+    // Try to init neighborhood immediately
+    initNeighborhoodDropdown();
+
+    // Hook a global re-init for neighborhoods 
+    window.refreshNeighborhoodDropdown = initNeighborhoodDropdown;
+
+    // Ensure Sports Grid is built
+    if (typeof buildSportsGrid === 'function') {
+      buildSportsGrid();
+    }
+
+    // START DATA LOADING
+    loadAllData();
+  });
+</script>
+</body>
+
+</html>
