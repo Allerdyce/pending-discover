@@ -1045,6 +1045,11 @@
                   padding-right: 12px;
                 }
 
+                /* On mobile: show Filters pill (toggles sidebar) */
+                #hero-variant-b #pill-filters {
+                  display: inline-flex;
+                }
+
                 /* Simplify Daily banner on mobile */
                 #hero-variant-b #daily-banner-b {
                   margin-top: 12px;
@@ -1076,11 +1081,24 @@
                   width: 28px;
                 }
               }
+
+              /* Prevent macro tab underline from shifting layout when toggled */
+              #hero-variant-b .macro-tab-btn {
+                border-bottom: 2px solid transparent;
+                padding-bottom: 0.5rem; /* match the previous pb-2 so height stays constant */
+              }
+
+              /* On desktop: hide Filters pill (sidebar is already visible) */
+              @media (min-width: 1024px) {
+                #hero-variant-b #pill-filters {
+                  display: none !important;
+                }
+              }
             </style>
             <!-- Level 1: Macro Tabs -->
             <div class="macro-tabs flex justify-center items-center gap-12 py-6 pb-3 bg-white relative z-50">
               <button id="tab-sports"
-                class="macro-tab-btn flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-semibold text-gray-900">
+                class="macro-tab-btn flex items-center gap-3 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-semibold text-gray-900">
                 <img src="sports.png" class="h-8 w-8 object-contain">
                 <span>Sports</span>
               </button>
@@ -12138,16 +12156,13 @@
         console.log(`Bridge: Clicked ${tabDef.id}, mapping to value: ${tabDef.value}`);
 
         // Visuals: Active State (Simple bottom border)
-        // Ensure only the active macro tab has the underline/bold styling.
+        // Keep border width constant to avoid layout shift.
         macroTabs.forEach(t => {
           const b = document.getElementById(t.id);
           if (!b) return;
-          b.classList.remove("border-b-4", "border-[#0034DD]", "font-bold");
-          // Keep the baseline style consistent
-          b.classList.remove("border-b-2", "border-blue-600");
+          b.classList.remove("border-[#0034DD]", "font-bold");
         });
-        e.currentTarget.classList.add("border-b-4", "border-[#0034DD]", "font-bold");
-        e.currentTarget.classList.remove("border-b-2", "border-blue-600");
+        e.currentTarget.classList.add("border-[#0034DD]", "font-bold");
 
         // Logic: Update Hidden Input
         if (hiddenActivityInput) {
