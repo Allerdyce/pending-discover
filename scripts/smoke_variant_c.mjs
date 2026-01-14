@@ -20,10 +20,24 @@ async function getWays(page) {
 
 async function clickSubscope(page, label) {
   // Buttons live in the sports sub-nav (#sub-nav-b)
-  const btn = page.locator('#sub-nav-b button', { hasText: label });
-  await btn.first().click();
+  // First wait for the sub-nav to exist at all.
+  const nav = page.locator('#sub-nav-b');
+  await nav.waitFor({ state: 'visible', timeout: 60000 });
+
+  // Then resolve the button by text.
+  const btn = page
+    .locator('#sub-nav-b button')
+    .filter({ hasText: label })
+    .first();
+
+  // Occasionally the sub-nav renders but the button text may be reflowed with newlines;
+  // ensure it's attached & visible before interacting.
+  await btn.waitFor({ state: 'visible', timeout: 60000 });
+  await btn.scrollIntoViewIfNeeded();
+  await btn.click({ timeout: 60000 });
+
   // Allow filter pipeline and DOM updates
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2000);
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -42,7 +56,7 @@ page.on('pageerror', (err) => {
 await page.goto(url, { waitUntil: 'domcontentloaded' });
 
 // Give client-side scripts time to load datasets and rerender.
-await page.waitForTimeout(4000);
+await page.waitForTimeout(6000);
 
 const baselineWays = await getWays(page);
 

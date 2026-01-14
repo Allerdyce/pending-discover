@@ -272,7 +272,7 @@
       /* keep square-ish look */
     }
   </style>
-  <script type="module" crossorigin src="/assets/variant_c-C27Ydkm4.js"></script>
+  <script type="module" crossorigin src="/assets/variant_c-DIcACMDT.js"></script>
 </head>
 
 <body>
@@ -995,7 +995,7 @@
           <!-- HERO SECTION (Grafted from Variant B) -->
           <section id="hero-variant-b" class="mb-6">
             <!-- Level 1: Macro Tabs -->
-            <div class="flex justify-center items-center gap-12 py-6 border-b border-slate-100 bg-white relative z-50">
+            <div class="flex justify-center items-center gap-12 py-6 pb-3 bg-white relative z-50">
               <button id="tab-sports"
                 class="flex items-center gap-3 border-b-2 border-blue-600 pb-2 px-2 transition-all group cursor-pointer text-[14px] font-semibold text-gray-900">
                 <img src="/assets/sports-O7PDT5gm.png" class="h-8 w-8 object-contain">
@@ -1016,6 +1016,20 @@
                 <img src="/assets/volunteer-BU1BsBEk.png" class="h-8 w-8 object-contain">
                 <span>Volunteer</span>
               </button>
+            </div>
+
+            <!-- Level 2: Sub Nav -->
+            <div id="sub-nav-b" class="bg-[#F2F5FE] mt-4 rounded-full px-[5px] py-[3px] grid grid-cols-4 gap-2 w-full">
+              <button data-scope="leagues"
+                class="w-full flex items-center justify-center py-2 bg-white rounded-full shadow-sm font-semibold text-sm text-black">Leagues</button>
+              <button data-scope="daily"
+                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Daily
+                Sports</button>
+              <button data-scope="tournaments"
+                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Tournaments</button>
+              <button id="btn-court-rentals" data-scope="Private Rentals"
+                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Court
+                Rentals</button>
             </div>
 
             <!-- Daily Banner + Subfilters (Variant B parity; hidden by default, shown only in Daily Sports scope) -->
@@ -1061,20 +1075,6 @@
               <button class="w-1/3 py-1.5 rounded-full border-2 border-black bg-white text-black text-sm font-bold shadow-sm" data-target="daily-all">All Daily</button>
               <button class="w-1/3 py-1.5 rounded-full border-2 border-transparent text-black text-sm font-bold hover:text-gray-600 transition" data-target="daily-dropin">Drop-Ins</button>
               <button class="w-1/3 py-1.5 rounded-full border-2 border-transparent text-black text-sm font-bold hover:text-gray-600 transition" data-target="daily-pickup">Pickups</button>
-            </div>
-
-            <!-- Level 2: Sub Nav -->
-            <div id="sub-nav-b" class="bg-[#F2F5FE] mt-4 rounded-full px-[5px] py-[3px] grid grid-cols-4 gap-2 w-full">
-              <button data-scope="leagues"
-                class="w-full flex items-center justify-center py-2 bg-white rounded-full shadow-sm font-semibold text-sm text-black">Leagues</button>
-              <button data-scope="daily"
-                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Daily
-                Sports</button>
-              <button data-scope="tournaments"
-                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Tournaments</button>
-              <button id="btn-court-rentals" data-scope="Private Rentals"
-                class="w-full flex items-center justify-center py-2 text-gray-500 font-semibold text-sm hover:text-black hover:bg-white/50 rounded-full transition relative z-10">Court
-                Rentals</button>
             </div>
 
             <!-- Level 3: Dropdown Pills & City -->
@@ -1651,6 +1651,18 @@
   document.addEventListener("DOMContentLoaded", () => {
     console.log("Variant C Bridge: Initializing...");
 
+    // Robust image fallback handling (avoids inline onerror="..." globals)
+    document.addEventListener(
+      "error",
+      (e) => {
+        const t = e && e.target;
+        if (!t || t.tagName !== "IMG") return;
+        if (!t.hasAttribute("data-handle-img-error")) return;
+        if (typeof handleImgError === "function") handleImgError(e);
+      },
+      true
+    );
+
     // 1. Elements
     const hiddenActivityInput = document.getElementById("activities"); // The A-logic driver
     const hiddenSportsInput = document.getElementById("sports");       // The A-logic driver
@@ -1879,6 +1891,23 @@
       "pill-days": "dropdown-days",
       "pill-hood": "dropdown-neighborhood"
     };
+
+    // Ensure the Sports list renders when the dropdown opens.
+    // In some build/serve setups the initial call can run before the pill UI is fully ready.
+    const pillSportsBtn = document.getElementById('pill-sports');
+    if (pillSportsBtn) {
+      pillSportsBtn.addEventListener('click', () => {
+        if (typeof buildSportsGrid === 'function') buildSportsGrid();
+      });
+    }
+
+    // Also render once on load so the list is never empty even if the user opens the
+    // dropdown before data/other scripts finish initializing.
+    try {
+      if (typeof buildSportsGrid === 'function') buildSportsGrid();
+    } catch (_) {
+      // no-op
+    }
 
     // Close all dropdowns helper
     function closeAllDropdowns() {
