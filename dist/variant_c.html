@@ -272,7 +272,7 @@
       /* keep square-ish look */
     }
   </style>
-  <script type="module" crossorigin src="/assets/variant_c-DpeVnBqT.js"></script>
+  <script type="module" crossorigin src="/assets/variant_c-Cbh4r6qF.js"></script>
 </head>
 
 <body>
@@ -1918,7 +1918,18 @@
     }
 
     // START DATA LOADING
-    loadAllData();
+    loadAllData().then((data) => {
+      window.activities = data || [];
+      renderActivities();
+      if (typeof updateResultsHeading === "function") updateResultsHeading();
+      if (typeof window.refreshNeighborhoodDropdown === "function") window.refreshNeighborhoodDropdown();
+
+      // Force initial scope/filter application if needed
+      const actEl = document.getElementById("activities");
+      if (actEl && actEl.value) {
+        actEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
   });
 </script>
 </body>
