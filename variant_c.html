@@ -5403,9 +5403,13 @@
           tournament: ["Tournament"],
           // Daily Sports groups common daily offerings
           "daily sports": ["Drop-in", "Pickup"],
-          // Events and Private Rentals included for future data; may yield 0 with current dataset
-          events: ["Event", "Watch Party", "Player Party", "Happy Hour"],
-          "private rentals": ["Private Rentals", "Rental"],
+          // Events + Rentals are supported.
+          events: ["Event"],
+          "private rentals": ["Private Rentals"],
+          // Fitness/Volunteer are source-scoped (classes/volunteer) and should not rely on type.
+          // Keep these empty so we don't accidentally drop everything with a mismatched type label.
+          fitness: [],
+          volunteer: [],
         };
         return map[key] || [];
       }
@@ -5498,6 +5502,8 @@
             events: "events",
             "daily sports": "daily",
             "private rentals": "rentals",
+            fitness: "classes",
+            volunteer: "volunteer",
           };
           const want = srcMap[key];
           if (want) {
@@ -5506,7 +5512,8 @@
               (a) => String(a.source || "").toLowerCase() === want
             );
             if (items.length === 0 && before > 0) {
-              console.warn("Scope Guard dropped all items!", "Want:", want, "First item source:", activities[0]?.source);
+              // Note: items is empty here, so don't read items[0].
+              console.warn("Scope Guard dropped all items!", "Want:", want);
             }
           }
         } catch (_) {
@@ -5520,7 +5527,13 @@
         const before = items.length;
         items = items.filter((a) => allowed.has(getActivityType(a)));
         if (items.length === 0 && before > 0) {
-          console.warn("Activity Type filter dropped all items!", "Allowed:", Array.from(allowed), "Sample activity type:", getActivityType(activities[0]));
+          console.warn(
+            "Activity Type filter dropped all items!",
+            "Allowed:",
+            Array.from(allowed),
+            "Sample activity type:",
+            before > 0 ? getActivityType((window.activities || [])[0]) : null
+          );
         }
       }
       // Apply daily-type sub-filter when in Daily scope
@@ -9898,9 +9911,25 @@
     import { fetchActivitiesFromSupabase } from './src/lib/supabase.js';
 
     async function loadAllData() {
-      // GUARD: If data is already populated, don't re-fetch
-      if (window.activities && window.activities.length > 0) {
-        console.log("loadAllData: Data already loaded, returning existing activities.");
+      // GUARD: Avoid re-fetching only if we already initialized *all* datasets.
+      // (We must NOT short-circuit just because some activities exist, otherwise
+      // later scopes like Tournaments / Court Rentals never load.)
+      const haveAllDatasets =
+        window.DATASETS &&
+        Array.isArray(window.DATASETS.leagues) &&
+        Array.isArray(window.DATASETS.daily) &&
+        Array.isArray(window.DATASETS.tournaments) &&
+        Array.isArray(window.DATASETS.rentals) &&
+        Array.isArray(window.DATASETS.events);
+      const haveAllNonEmpty =
+        haveAllDatasets &&
+        (window.DATASETS.leagues?.length ?? 0) > 0 &&
+        // Baltimore expects tournaments and rentals to exist; if they're empty we should try loading.
+        (window.DATASETS.tournaments?.length ?? 0) > 0 &&
+        (window.DATASETS.rentals?.length ?? 0) > 0;
+
+      if (haveAllNonEmpty && window.activities && window.activities.length > 0) {
+        console.log("loadAllData: Datasets already loaded, returning existing activities.");
         return window.activities;
       }
 
@@ -9916,6 +9945,7 @@
             const daily = sbData.filter(a => a.source === 'daily').map(transformDailyToActivity).filter(Boolean);
             const tourneys = sbData.filter(a => a.source === 'tournaments').map(transformLeagueToActivity).filter(Boolean); // Re-use league parser
             const events = sbData.filter(a => a.source === 'events').map(transformLeagueToActivity).filter(Boolean); // Re-use league parser
+            const rentals = sbData.filter(a => a.source === 'rentals').map(transformRentalToActivity).filter(Boolean);
 
 
             // Apply date shifting to leagues to ensure they appear "upcoming"
@@ -9925,8 +9955,96 @@
             DATASETS.daily = daily;
             DATASETS.tournaments = tourneys;
             DATASETS.events = events;
+            DATASETS.rentals = rentals;
 
-            const all = [...leagues, ...daily, ...tourneys, ...events];
+            // If Supabase is missing certain sources (common during migration), backfill those datasets
+            // from JSON files so the Variant C sub-tabs still work.
+            const missingTourneys = tourneys.length === 0;
+            const missingRentals = rentals.length === 0;
+            const missingEvents = events.length === 0;
+            const missingClasses = !Array.isArray(DATASETS.classes) || DATASETS.classes.length === 0;
+            const missingVolunteer = !Array.isArray(DATASETS.volunteer) || DATASETS.volunteer.length === 0;
+
+            if (missingTourneys || missingRentals || missingEvents || missingClasses || missingVolunteer) {
+              console.warn(
+                "Supabase missing datasets; backfilling from JSON:",
+                JSON.stringify({ missingTourneys, missingRentals, missingEvents, missingClasses, missingVolunteer })
+              );
+              try {
+                const [tRes, rRes, eRes, cRes, vRes] = await Promise.allSettled([
+                  missingTourneys ? fetch("./data/tournaments.json", { cache: "no-store" }) : Promise.resolve(null),
+                  missingRentals ? fetch("./data/rentals.json", { cache: "no-store" }) : Promise.resolve(null),
+                  missingEvents ? fetch("./data/events.json", { cache: "no-store" }) : Promise.resolve(null),
+                  missingClasses ? fetch("./data/classes.json", { cache: "no-store" }) : Promise.resolve(null),
+                  missingVolunteer ? fetch("./data/volunteer.json", { cache: "no-store" }) : Promise.resolve(null),
+                ]);
+
+                if (missingTourneys && tRes.status === "fulfilled" && tRes.value && tRes.value.ok) {
+                  const txt = await tRes.value.text();
+                  const parsed = __robustParseJSON(txt);
+                  const list = __extractList(parsed);
+                  const mapped = (Array.isArray(list) ? list : [])
+                    .map(transformTournamentToActivity)
+                    .filter(Boolean);
+                  if (mapped.length) DATASETS.tournaments = mapped;
+                }
+
+                if (missingRentals && rRes.status === "fulfilled" && rRes.value && rRes.value.ok) {
+                  const txt = await rRes.value.text();
+                  const parsed = __robustParseJSON(txt);
+                  const list = __extractList(parsed);
+                  const mapped = (Array.isArray(list) ? list : [])
+                    .map(transformRentalToActivity)
+                    .filter(Boolean);
+                  if (mapped.length) DATASETS.rentals = mapped;
+                }
+
+                if (missingEvents && eRes.status === "fulfilled" && eRes.value && eRes.value.ok) {
+                  const txt = await eRes.value.text();
+                  const parsed = __robustParseJSON(txt);
+                  const list = __extractList(parsed);
+                  const mapped = (Array.isArray(list) ? list : [])
+                    .map(transformEventToActivity)
+                    .filter(Boolean);
+                  if (mapped.length) DATASETS.events = mapped;
+                }
+
+                if (missingClasses && cRes.status === "fulfilled" && cRes.value && cRes.value.ok) {
+                  const txt = await cRes.value.text();
+                  const parsed = __robustParseJSON(txt);
+                  const sections = Array.isArray(parsed?.sections) ? parsed.sections : [];
+                  const mapped = [];
+                  sections.forEach((sec) => {
+                    const evs = Array.isArray(sec?.events) ? sec.events : [];
+                    evs.forEach((row) => {
+                      const a = transformClassToActivity(row, sec);
+                      if (a) mapped.push(a);
+                    });
+                  });
+                  if (mapped.length) DATASETS.classes = mapped;
+                }
+
+                if (missingVolunteer && vRes.status === "fulfilled" && vRes.value && vRes.value.ok) {
+                  const txt = await vRes.value.text();
+                  const parsed = __robustParseJSON(txt);
+                  const a = transformVolunteerToActivity(parsed);
+                  const mapped = a ? [a] : [];
+                  if (mapped.length) DATASETS.volunteer = mapped;
+                }
+              } catch (e) {
+                console.warn("Backfill from JSON failed:", e);
+              }
+            }
+
+            const all = [
+              ...(DATASETS.leagues || []),
+              ...(DATASETS.daily || []),
+              ...(DATASETS.tournaments || []),
+              ...(DATASETS.events || []),
+              ...(DATASETS.rentals || []),
+              ...(DATASETS.classes || []),
+              ...(DATASETS.volunteer || []),
+            ];
             window.activities = all;
             return all;
           } catch (transformErr) {
@@ -9945,14 +10063,18 @@
       let tournaments = [];
       let events = [];
       let rentals = [];
+      let classes = [];
+      let volunteer = [];
       // Fetch in parallel; tolerate one failing
-      const [leaguesRes, dailyRes, tournamentsRes, eventsRes, rentalsRes] =
+      const [leaguesRes, dailyRes, tournamentsRes, eventsRes, rentalsRes, classesRes, volunteerRes] =
         await Promise.allSettled([
           fetch("./data/leagues.json", { cache: "no-store" }),
           fetch("./data/daily-sports.json", { cache: "no-store" }),
           fetch("./data/tournaments.json", { cache: "no-store" }),
           fetch("./data/events.json", { cache: "no-store" }),
           fetch("./data/rentals.json", { cache: "no-store" }),
+          fetch("./data/classes.json", { cache: "no-store" }),
+          fetch("./data/volunteer.json", { cache: "no-store" }),
         ]);
       try {
         if (leaguesRes.status === "fulfilled" && leaguesRes.value.ok) {
@@ -10000,11 +10122,16 @@
           const text = await tournamentsRes.value.text();
           const data = __robustParseJSON(text);
           const list = __extractList(data);
+          console.log(
+            "tournaments.json extracted list length:",
+            Array.isArray(list) ? list.length : "non-array"
+          );
           // If list empty, consider fallback
           if (Array.isArray(list) && list.length) {
             tournaments = list
               .map(transformTournamentToActivity)
               .filter(Boolean);
+            console.log("tournaments mapped activities:", tournaments.length);
             DATASETS.tournaments = tournaments.slice();
           } else {
             needRawTournamentsFallback = true;
@@ -10086,8 +10213,10 @@
           const text = await rentalsRes.value.text();
           const data = __robustParseJSON(text);
           const list = __extractList(data);
+          console.log("rentals.json extracted list length:", Array.isArray(list) ? list.length : "non-array");
           if (Array.isArray(list) && list.length) {
             rentals = list.map(transformRentalToActivity).filter(Boolean);
+            console.log("rentals mapped activities:", rentals.length);
             DATASETS.rentals = rentals.slice();
           }
         } else {
@@ -10101,12 +10230,62 @@
       } catch (e) {
         console.warn("rentals.json parse failed:", e);
       }
-      window.activities = [].concat(leagues, daily, tournaments, events, rentals);
+
+      // Classes/Fitness (JSON only)
+      try {
+        if (classesRes.status === "fulfilled" && classesRes.value && classesRes.value.ok) {
+          const text = await classesRes.value.text();
+          const data = __robustParseJSON(text);
+          const sections = Array.isArray(data?.sections) ? data.sections : [];
+          const mapped = [];
+          sections.forEach((sec) => {
+            const evs = Array.isArray(sec?.events) ? sec.events : [];
+            evs.forEach((row) => {
+              const a = transformClassToActivity(row, sec);
+              if (a) mapped.push(a);
+            });
+          });
+          classes = mapped;
+          DATASETS.classes = classes.slice();
+          console.log("classes.json mapped activities:", classes.length);
+        } else {
+          console.warn(
+            "classes.json fetch failed or not ok:",
+            classesRes.status === "rejected"
+              ? classesRes.reason
+              : classesRes.value && classesRes.value.status
+          );
+        }
+      } catch (e) {
+        console.warn("classes.json parse failed:", e);
+      }
+
+      // Volunteer (JSON only; typically a single card object)
+      try {
+        if (volunteerRes.status === "fulfilled" && volunteerRes.value && volunteerRes.value.ok) {
+          const text = await volunteerRes.value.text();
+          const data = __robustParseJSON(text);
+          const a = transformVolunteerToActivity(data);
+          volunteer = a ? [a] : [];
+          DATASETS.volunteer = volunteer.slice();
+          console.log("volunteer.json mapped activities:", volunteer.length);
+        } else {
+          console.warn(
+            "volunteer.json fetch failed or not ok:",
+            volunteerRes.status === "rejected"
+              ? volunteerRes.reason
+              : volunteerRes.value && volunteerRes.value.status
+          );
+        }
+      } catch (e) {
+        console.warn("volunteer.json parse failed:", e);
+      }
+      window.activities = [].concat(leagues, daily, tournaments, events, rentals, classes, volunteer);
       // Shift only league dates forward (leagues are first segment)
       if (leagues.length > 0) {
         shiftActivitiesDates(leagues, 4);
         // Rebuild activities with shifted leagues
-        window.activities = [].concat(leagues, daily, tournaments, events, rentals);
+        window.activities = [].concat(leagues, daily, tournaments, events, rentals, classes, volunteer);
         // Keep datasets.leagues in sync after date shift
         DATASETS.leagues = leagues.slice();
       }
@@ -11454,6 +11633,88 @@
         lng: typeof lng === "number" ? lng : null,
       };
     }
+
+    // --- Fitness (Classes) and Volunteer transforms (Variant C)
+    function transformClassToActivity(r, section) {
+      if (!r) return null;
+      const title = r.title || r.program_name || r.name || "Fitness Class";
+      const venueName = r.locationName || r.venue_name || "";
+      const neighborhood = r.neighborhood || "";
+      const timeStart = r.startTime || r.time_start || "";
+      const cover = r?.images?.coverImage?.imgSrc || r.image_url || "";
+      const id = `${section?.dateLabel || "class"}-${title}-${venueName}-${timeStart}`;
+      const mapUrl = venueName
+        ? `https://www.google.com/maps?q=${encodeURIComponent(venueName)}`
+        : "";
+      return {
+        id: String(id).toLowerCase().replace(/\s+/g, "-"),
+        source: "classes",
+        activity_type: "Class",
+        program_name: title,
+        sport: "Fitness",
+        venue_name: venueName,
+        venue_map_url: mapUrl,
+        time_start: timeStart,
+        time_end: r.endTime || r.time_end || "",
+        format: r.format || "",
+        skill_levels: [],
+        features: [],
+        day_label: section?.dateLabel || "",
+        day_abbrev: "",
+        date_mmdd: "",
+        neighborhood,
+        member_price_current: null,
+        price_person_current:
+          r?.pricing?.standard?.price ?? r?.pricing?.perPerson?.current ?? null,
+        price_team: null,
+        image_url: cover ? fixImageUrl(cover) : getSportPlaceholder("Fitness"),
+        img: cover ? fixImageUrl(cover) : getSportPlaceholder("Fitness"),
+        image_alt: title,
+        lat: null,
+        lng: null,
+      };
+    }
+
+    function transformVolunteerToActivity(data) {
+      if (!data) return null;
+      const card = data.card || data;
+      const title = card?.title || card?.program_name || "Volunteer";
+      const venueName = card?.location?.label || "";
+      const timeDisplay = card?.time?.display || "";
+      const dateText = card?.time?.dateText || "";
+      const startTime = card?.time?.startTime || "";
+      const endTime = card?.time?.endTime || "";
+      const img = card?.images?.programImage?.imgSrc || "";
+      const mapHref = card?.location?.googleMaps?.href || "";
+      const id = `${dateText}-${title}-${venueName}-${startTime}`;
+      return {
+        id: String(id).toLowerCase().replace(/\s+/g, "-"),
+        source: "volunteer",
+        activity_type: "Volunteer",
+        program_name: title,
+        sport: "Volunteer",
+        venue_name: venueName,
+        venue_map_url: mapHref || (venueName ? `https://www.google.com/maps?q=${encodeURIComponent(venueName)}` : ""),
+        time_start: startTime,
+        time_end: endTime,
+        format: card?.format?.display || "",
+        skill_levels: [],
+        features: card?.features || [],
+        day_label: dateText,
+        day_abbrev: "",
+        date_mmdd: "",
+        neighborhood: "",
+        member_price_current: card?.pricing?.perPerson?.current ?? null,
+        price_person_current: card?.pricing?.perPerson?.current ?? null,
+        price_team: card?.pricing?.perTeam?.current ?? null,
+        image_url: img ? fixImageUrl(img) : getSportPlaceholder("Volunteer"),
+        img: img ? fixImageUrl(img) : getSportPlaceholder("Volunteer"),
+        image_alt: title,
+        lat: null,
+        lng: null,
+        _time_display: timeDisplay,
+      };
+    }
   </script>
 
   <!-- Volo Pass Modal -->
@@ -11595,8 +11856,11 @@
     // 4. Wire Macro Tabs (Sports, Events, Fitness, Volunteer)
     // These are the top-level "Level 1" tabs. 
     // We map them to specific Activity types. if data exists, they will show.
+    // Macro tabs are "top-level" categories. In this build, Sports should *not* force the scope back to
+    // "Leagues" because users can be browsing Daily Sports / Tournaments / Court Rentals within Sports.
+    // So Sports behaves as "stay on whatever Sports scope is currently active".
     const macroTabs = [
-      { id: "tab-sports", value: "Leagues" }, // verified default
+      { id: "tab-sports", value: null },
       { id: "tab-events", value: "Events" },
       { id: "tab-fitness", value: "Fitness" },
       { id: "tab-volunteer", value: "Volunteer" }
@@ -11621,13 +11885,18 @@
 
         // Logic: Update Hidden Input
         if (hiddenActivityInput) {
-          hiddenActivityInput.value = tabDef.value;
+          // If Sports tab, preserve current sports sub-scope (Leagues/Daily/Tournaments/Private Rentals)
+          const nextValue = tabDef.value == null
+            ? (hiddenActivityInput.value || "Leagues")
+            : tabDef.value;
+
+          hiddenActivityInput.value = nextValue;
           // Dispatch events to trigger A's filtering
           hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
           hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-          // Debugging
-          updateResultsHeading(); // Force heading update immediately to see reaction
+          // Use the existing rerender pipeline (safe for prod builds)
+          triggerRerenderFromBridge();
         } else {
           console.error("Bridge: Hidden #activities input not found!");
         }

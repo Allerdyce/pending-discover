@@ -272,7 +272,7 @@
       /* keep square-ish look */
     }
   </style>
-  <script type="module" crossorigin src="/assets/variant_c-CI8SrEsw.js"></script>
+  <script type="module" crossorigin src="/assets/variant_c-DyT7xU7B.js"></script>
 </head>
 
 <body>
@@ -1686,8 +1686,11 @@
     // 4. Wire Macro Tabs (Sports, Events, Fitness, Volunteer)
     // These are the top-level "Level 1" tabs. 
     // We map them to specific Activity types. if data exists, they will show.
+    // Macro tabs are "top-level" categories. In this build, Sports should *not* force the scope back to
+    // "Leagues" because users can be browsing Daily Sports / Tournaments / Court Rentals within Sports.
+    // So Sports behaves as "stay on whatever Sports scope is currently active".
     const macroTabs = [
-      { id: "tab-sports", value: "Leagues" }, // verified default
+      { id: "tab-sports", value: null },
       { id: "tab-events", value: "Events" },
       { id: "tab-fitness", value: "Fitness" },
       { id: "tab-volunteer", value: "Volunteer" }
@@ -1712,13 +1715,18 @@
 
         // Logic: Update Hidden Input
         if (hiddenActivityInput) {
-          hiddenActivityInput.value = tabDef.value;
+          // If Sports tab, preserve current sports sub-scope (Leagues/Daily/Tournaments/Private Rentals)
+          const nextValue = tabDef.value == null
+            ? (hiddenActivityInput.value || "Leagues")
+            : tabDef.value;
+
+          hiddenActivityInput.value = nextValue;
           // Dispatch events to trigger A's filtering
           hiddenActivityInput.dispatchEvent(new Event('input', { bubbles: true }));
           hiddenActivityInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-          // Debugging
-          updateResultsHeading(); // Force heading update immediately to see reaction
+          // Use the existing rerender pipeline (safe for prod builds)
+          triggerRerenderFromBridge();
         } else {
           console.error("Bridge: Hidden #activities input not found!");
         }
