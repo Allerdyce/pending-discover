@@ -1126,7 +1126,7 @@
             <!-- Original inputs required by A's logic -->
             <section id="search-bar-section" class="mb-6">
               <!-- Keep IDs intact so getElementById works -->
-              <input type="text" id="city" value="Baltimore" />
+              <input type="text" id="city" value="Towson" />
               <input type="text" id="activities" /> <!-- Driven by Sub Nav -->
               <input type="text" id="sports" /> <!-- Driven by Sports Pill -->
               <button id="desktop-search-btn"></button>
@@ -3837,7 +3837,7 @@
       let allItems =
         typeof getFilteredActivities === "function"
           ? getFilteredActivities()
-          : activities;
+          : (window.activities || []);
       // Determine current Activities scope for potential scope-specific sorting
       const actElForSort = document.getElementById("activities");
       const actValForSort = actElForSort
@@ -5790,7 +5790,7 @@
           ) {
             items = DATASETS.leagues.slice();
           } else {
-            items = activities.filter(
+            items = (window.activities || []).filter(
               (a) => String(a.source || "").toLowerCase() === "leagues"
             );
           }
@@ -5847,7 +5847,7 @@
       if (!list) return;
       // Collect NvN from current activities
       const set = new Set();
-      (activities || []).forEach((a) => {
+      (window.activities || []).forEach((a) => {
         const nvn = deriveNvNFromFormat(a && a.format);
         if (nvn) set.add(nvn);
       });
@@ -6094,7 +6094,7 @@
           ) {
             items = DATASETS.leagues.slice();
           } else {
-            items = activities.filter(
+            items = (window.activities || []).filter(
               (a) => String(a.source || "").toLowerCase() === "leagues"
             );
           }
@@ -9107,7 +9107,10 @@
                   );
                 }
               }
-              activities = [];
+              // ONLY reset if we actually have new data from files
+              if (leagues.length > 0 || daily.length > 0 || tournaments.length > 0 || events.length > 0 || rentals.length > 0) {
+                activities = [];
+              }
               if (leagues.length > 0) {
                 shiftActivitiesDates(leagues, 4);
                 activities = activities.concat(leagues);
@@ -9164,17 +9167,13 @@
           });
         }
         // Try to fetch both JSON files even on file:// (may fail due to CORS in some browsers)
-        loadAllData().then(() => {
-          if (Array.isArray(activities) && activities.length > 0) {
-            box.classList.add("hidden");
-          }
-          parseAndApplyQueryFilters();
-        });
+        // REMOVED redundant loadAllData call here to prevent race condition.
+        // The main loadAllData call at the bottom of the script handles initialization.
+        parseAndApplyQueryFilters();
       } else {
         // Load data from same folder (both datasets)
-        loadAllData().then(() => {
-          parseAndApplyQueryFilters();
-        });
+        // REMOVED redundant loadAllData call here as well.
+        parseAndApplyQueryFilters();
       }
       // Initialize filter states for the current (possibly empty) dataset
       updateFilterOptionStates();
@@ -9878,6 +9877,12 @@
     import { fetchActivitiesFromSupabase } from './src/lib/supabase.js';
 
     async function loadAllData() {
+      // GUARD: If data is already populated, don't re-fetch
+      if (window.activities && window.activities.length > 0) {
+        console.log("loadAllData: Data already loaded, returning existing activities.");
+        return window.activities;
+      }
+
       // 1. Try Supabase
       console.log("Attempting to fetch data from Supabase...");
       try {
@@ -11800,7 +11805,20 @@
 
     // START DATA LOADING
     loadAllData().then((data) => {
-      window.activities = data || [];
+      // Robust assignment: only overwrite if we got data, or if we really have nothing.
+      // If data is empty but we have DATASETS, try to reconstruct.
+      console.log("loadAllData returned:", data ? data.length : "null/undefined");
+
+      if (Array.isArray(data) && data.length > 0) {
+        window.activities = data;
+      } else if (window.activities && window.activities.length > 0) {
+        console.log("Keeping existing window.activities (" + window.activities.length + " items)");
+      } else {
+        window.activities = data || [];
+      }
+
+      console.log("Final window.activities size for render:", window.activities.length);
+
       renderActivities();
       if (typeof updateResultsHeading === "function") updateResultsHeading();
       if (typeof window.refreshNeighborhoodDropdown === "function") window.refreshNeighborhoodDropdown();
