@@ -9988,13 +9988,13 @@
       // Fetch in parallel; tolerate one failing
       const [leaguesRes, dailyRes, tournamentsRes, eventsRes, rentalsRes, volunteerRes, classesRes] =
         await Promise.allSettled([
-          fetch("./public/data/leagues.json", { cache: "no-store" }),
-          fetch("./public/data/daily-sports.json", { cache: "no-store" }),
-          fetch("./public/data/tournaments.json", { cache: "no-store" }),
-          fetch("./public/data/events.json", { cache: "no-store" }),
-          fetch("./public/data/rentals.json", { cache: "no-store" }),
-          fetch("./public/data/volunteer.json", { cache: "no-store" }),
-          fetch("./public/data/classes.json", { cache: "no-store" }),
+          fetch("./data/leagues.json", { cache: "no-store" }),
+          fetch("./data/daily-sports.json", { cache: "no-store" }),
+          fetch("./data/tournaments.json", { cache: "no-store" }),
+          fetch("./data/events.json", { cache: "no-store" }),
+          fetch("./data/rentals.json", { cache: "no-store" }),
+          fetch("./data/volunteer.json", { cache: "no-store" }),
+          fetch("./data/classes.json", { cache: "no-store" }),
         ]);
       try {
         if (leaguesRes.status === "fulfilled" && leaguesRes.value.ok) {
