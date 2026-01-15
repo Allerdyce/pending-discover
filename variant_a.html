@@ -11188,6 +11188,10 @@
         start_date_text: startText,
         time_start: timeStart,
         time_end: timeEnd,
+        // For new card renderer which expects these keys
+        day_label: startText,
+        startTime: timeStart,
+        endTime: timeEnd,
         format: formatDisplay,
         skill_levels: skillDisplay ? [String(skillDisplay)] : [],
         features: feats,
@@ -11240,6 +11244,10 @@
         start_date_text: startText,
         time_start: timeStart,
         time_end: "",
+        // For new card renderer which expects these keys
+        day_label: "Today",
+        startTime: timeStart,
+        endTime: "",
         format: "Open",
         skill_levels: [],
         features: [],
