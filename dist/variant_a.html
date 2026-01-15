@@ -7819,6 +7819,8 @@
       // Strong source-based typing first
       if (activity && activity.source === "leagues") return "League";
       if (activity && activity.source === "rentals") return "Private Rentals";
+      if (activity && activity.source === "volunteer") return "Volunteering";
+      if (activity && activity.source === "classes") return "Classes";
       if (canon === "league" || canon === "leagues") return "League";
       if (canon === "drop-in" || canon === "dropin" || canon === "drop in")
         return "Drop-in";
@@ -7840,6 +7842,8 @@
         canon === "private rentals"
       )
         return "Private Rentals";
+      if (canon === "volunteering" || canon === "volunteer") return "Volunteering";
+      if (canon === "classes" || canon === "class") return "Classes";
       // Fallbacks by source to ensure robust typing when raw type missing
       if (activity && activity.source === "events") return "Event";
       if (activity && activity.source === "tournaments") return "Tournament";
