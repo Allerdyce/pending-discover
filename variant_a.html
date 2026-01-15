@@ -5598,6 +5598,8 @@
             events: "events",
             "daily sports": "daily",
             "private rentals": "rentals",
+            volunteering: "volunteer",
+            classes: "classes",
           };
           const want = srcMap[key];
           if (want)
@@ -6040,6 +6042,8 @@
           "daily sports": ["Drop-in", "Pickup"],
           events: ["Event", "Watch Party", "Player Party", "Happy Hour"],
           "private rentals": ["Private Rentals", "Rental"],
+          volunteering: ["Volunteering"],
+          classes: ["Classes"],
         };
         const allowed = map[val] || [];
         if (allowed.length > 0) {
@@ -9898,6 +9902,8 @@
       tournaments: [],
       events: [],
       rentals: [],
+      volunteer: [],
+      classes: [],
     };
 
     // Robust JSON parser used for server-side loads as well
@@ -9975,14 +9981,18 @@
       let tournaments = [];
       let events = [];
       let rentals = [];
+      let volunteer = [];
+      let classes = [];
       // Fetch in parallel; tolerate one failing
-      const [leaguesRes, dailyRes, tournamentsRes, eventsRes, rentalsRes] =
+      const [leaguesRes, dailyRes, tournamentsRes, eventsRes, rentalsRes, volunteerRes, classesRes] =
         await Promise.allSettled([
           fetch("./data/leagues.json", { cache: "no-store" }),
           fetch("./data/daily-sports.json", { cache: "no-store" }),
           fetch("./data/tournaments.json", { cache: "no-store" }),
           fetch("./data/events.json", { cache: "no-store" }),
           fetch("./data/rentals.json", { cache: "no-store" }),
+          fetch("./data/volunteer.json", { cache: "no-store" }),
+          fetch("./data/classes.json", { cache: "no-store" }),
         ]);
       try {
         if (leaguesRes.status === "fulfilled" && leaguesRes.value.ok) {
@@ -10131,12 +10141,70 @@
       } catch (e) {
         console.warn("rentals.json parse failed:", e);
       }
-      activities = [].concat(leagues, daily, tournaments, events, rentals);
+
+      // Volunteer (JSON only; non-standard shape: { card: { ... } })
+      try {
+        if (volunteerRes.status === "fulfilled" && volunteerRes.value.ok) {
+          const text = await volunteerRes.value.text();
+          const data = __robustParseJSON(text);
+          const list = __extractList(data);
+          if (Array.isArray(list) && list.length) {
+            // If __extractList found something iterable, transform it
+            volunteer = list
+              .map(transformVolunteerToActivity)
+              .filter(Boolean);
+          } else if (data && data.card) {
+            // Most common: single card
+            const v = transformVolunteerToActivity(data.card);
+            volunteer = v ? [v] : [];
+          }
+          DATASETS.volunteer = volunteer.slice();
+        } else {
+          console.warn(
+            "volunteer.json fetch failed or not ok:",
+            volunteerRes.status === "rejected"
+              ? volunteerRes.reason
+              : volunteerRes.value && volunteerRes.value.status
+          );
+        }
+      } catch (e) {
+        console.warn("volunteer.json parse failed:", e);
+      }
+
+      // Classes (JSON only; non-standard shape: { sections: [{ events: [...] }] })
+      try {
+        if (classesRes.status === "fulfilled" && classesRes.value.ok) {
+          const text = await classesRes.value.text();
+          const data = __robustParseJSON(text);
+          const list = __extractList(data);
+          if (Array.isArray(list) && list.length) {
+            classes = list.map(transformClassToActivity).filter(Boolean);
+          } else if (data && Array.isArray(data.sections)) {
+            const eventsFlat = data.sections.flatMap((s) =>
+              Array.isArray(s && s.events) ? s.events : []
+            );
+            classes = eventsFlat
+              .map(transformClassToActivity)
+              .filter(Boolean);
+          }
+          DATASETS.classes = classes.slice();
+        } else {
+          console.warn(
+            "classes.json fetch failed or not ok:",
+            classesRes.status === "rejected"
+              ? classesRes.reason
+              : classesRes.value && classesRes.value.status
+          );
+        }
+      } catch (e) {
+        console.warn("classes.json parse failed:", e);
+      }
+      activities = [].concat(leagues, daily, tournaments, events, rentals, volunteer, classes);
       // Shift only league dates forward (leagues are first segment)
       if (leagues.length > 0) {
         shiftActivitiesDates(leagues, 4);
         // Rebuild activities with shifted leagues
-        activities = [].concat(leagues, daily, tournaments, events, rentals);
+        activities = [].concat(leagues, daily, tournaments, events, rentals, volunteer, classes);
         // Keep datasets.leagues in sync after date shift
         DATASETS.leagues = leagues.slice();
       }
@@ -10154,6 +10222,10 @@
                 ? "Events"
                 : rentals.length
                   ? "Private Rentals"
+                  : volunteer.length
+                    ? "Volunteering"
+                    : classes.length
+                      ? "Classes"
                   : "";
         if (scope) actEl.value = scope;
       }
@@ -10163,6 +10235,8 @@
         daily: daily.length,
         events: events.length,
         rentals: rentals.length,
+        volunteer: volunteer.length,
+        classes: classes.length,
       });
       // Use unified apply to ensure scope guards and UI visibility are honored
       if (typeof applyActivityTypeFilterVisibility === "function")
@@ -11032,6 +11106,118 @@
         format: "Open",
         skill_levels: [],
         features: [],
+      };
+    }
+
+    function transformVolunteerToActivity(v) {
+      if (!v) return null;
+      // volunteer.json is a single "DiscoverCard" with nested fields.
+      const title = v.title || v.program_name || v.name || "Volunteer";
+      const locLabel =
+        (v.location && (v.location.label || v.location.name)) ||
+        v.venue_name ||
+        "";
+      const mapUrl =
+        (v.location && v.location.googleMaps && v.location.googleMaps.href) ||
+        v.venue_map_url ||
+        (locLabel ? `https://www.google.com/maps?q=${encodeURIComponent(locLabel)}` : "");
+      const time = v.time || {};
+      const startText = time.dateText || "";
+      const timeStart = time.startTime || "";
+      const timeEnd = time.endTime || "";
+      const formatDisplay = (v.format && v.format.display) || v.format || "Open";
+      const skillDisplay =
+        (v.skillLevel && (v.skillLevel.level || v.skillLevel.display)) ||
+        "";
+      const imageUrlRaw =
+        (v.images && v.images.programImage && v.images.programImage.imgSrc) ||
+        v.image_url ||
+        v.image ||
+        "";
+      const imageUrl = isInvalidImageUrl(imageUrlRaw)
+        ? getSportPlaceholder("Other")
+        : fixImageUrl(imageUrlRaw);
+      const feats = Array.isArray(v.features) ? v.features.slice() : [];
+
+      return {
+        id: String(v.id || v.slug || title).replace(/\s+/g, "-").toLowerCase(),
+        source: "volunteer",
+        activity_type: "Volunteering",
+        program_name: title,
+        sport: "Other",
+        venue_name: locLabel,
+        venue_map_url: mapUrl,
+        start_date_text: startText,
+        time_start: timeStart,
+        time_end: timeEnd,
+        format: formatDisplay,
+        skill_levels: skillDisplay ? [String(skillDisplay)] : [],
+        features: feats,
+        // Prices (usually free)
+        member_price_current: null,
+        price_person_current:
+          v.pricing && v.pricing.perPerson
+            ? toNum(v.pricing.perPerson.current)
+            : null,
+        image_url: imageUrl,
+        img: imageUrl,
+        image_alt: title,
+        neighborhood: "",
+        lat: null,
+        lng: null,
+      };
+    }
+
+    function transformClassToActivity(c) {
+      if (!c) return null;
+      const title = c.title || c.program_name || c.name || "Class";
+      const venueName = c.locationName || c.venue_name || c.location || "";
+      const neighborhood = c.neighborhood || "";
+      const mapUrl = venueName
+        ? `https://www.google.com/maps?q=${encodeURIComponent(venueName)}`
+        : "";
+      const imageUrlRaw =
+        (c.images && c.images.coverImage && c.images.coverImage.imgSrc) ||
+        c.image_url ||
+        c.image ||
+        "";
+      const imageUrl = isInvalidImageUrl(imageUrlRaw)
+        ? getSportPlaceholder("Other")
+        : fixImageUrl(imageUrlRaw);
+      // No reliable date in this dataset; keep empty so cards don't break.
+      const startText = "";
+      const timeStart = c.startTime || "";
+
+      return {
+        id: String(c.id || c.slug || `${title}-${venueName}-${timeStart}`)
+          .replace(/\s+/g, "-")
+          .toLowerCase(),
+        source: "classes",
+        activity_type: "Classes",
+        program_name: title,
+        sport: "Other",
+        venue_name: venueName,
+        venue_map_url: mapUrl,
+        start_date_text: startText,
+        time_start: timeStart,
+        time_end: "",
+        format: "Open",
+        skill_levels: [],
+        features: [],
+        member_price_current:
+          c.pricing && c.pricing.member ? toNum(c.pricing.member.price) : null,
+        price_person_current:
+          c.pricing && c.pricing.standard
+            ? toNum(c.pricing.standard.price)
+            : null,
+        image_url: imageUrl,
+        img: imageUrl,
+        image_alt: title,
+        neighborhood,
+        lat: null,
+        lng: null,
+        // Optional attendance data
+        spots: c.spots || null,
       };
     }
 
