@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import {
     Trophy, Clock, BadgeDollarSign, MapPin, Search, Sparkles,
     Users, Mars, Venus, Circle, SlidersHorizontal
@@ -22,6 +22,30 @@ const Sidebar = ({ filters, setFilters }) => {
 
     return (
         <aside className="hidden lg:block lg:col-span-1" style={{ maxWidth: '310px' }}>
+            {/* Type of Activity */}
+            <div className="bg-white rounded-2xl border border-slate-200 mb-6 overflow-hidden">
+                <div className="p-3">
+                    <label className="text-xs font-semibold text-slate-600 uppercase">Type of Activity</label>
+                    <div className="mt-2 relative">
+                        <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#222222] pointer-events-none" />
+                        <select
+                            className="w-full appearance-none border border-slate-200 rounded-xl px-2 py-3 pl-10 pr-9 focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white"
+                            value={filters?.activityType || 'leagues'}
+                            onChange={(e) => updateFilter('activityType', e.target.value)}
+                        >
+                            <option value="leagues">Leagues</option>
+                            <option value="tournaments">Tournaments</option>
+                            <option value="daily-sports">Daily Sports</option>
+                            <option value="events">Events</option>
+                            <option value="private-rentals">Private Rentals</option>
+                            <option value="volunteering">Volunteering</option>
+                            <option value="classes">Classes</option>
+                        </select>
+                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">▾</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Map Preview - Unhidden per parity request */}
             <div className="bg-white p-0 rounded-2xl border border-slate-200 mb-6 overflow-hidden">
                 <div className="h-40 bg-gray-200 flex items-center justify-center cursor-pointer relative group">
@@ -42,18 +66,32 @@ const Sidebar = ({ filters, setFilters }) => {
             </div>
 
             <div id="filters-form" className="space-y-0 p-0 bg-transparent">
-                {/* Scope Explainer */}
-                <div className="pb-4">
-                    <div className="w-full flex items-center justify-between py-2">
-                        <div className="flex items-center gap-2">
-                            <Trophy className="h-5 w-5 text-[#222222]" />
-                            <h4 className="font-semibold text-lg">Leagues</h4>
+                {/* Scope Explainer (keep default league copy; update label only) */}
+                {(() => {
+                    const type = (filters?.activityType || 'leagues');
+                    const meta = {
+                        'leagues': { Icon: Trophy, title: 'Leagues', desc: 'Weekly games and playoffs. Sign up solo, with friends, or a full team — we guarantee a game every week.' },
+                        'tournaments': { Icon: Trophy, title: 'Tournaments', desc: 'Single-day competitions with multiple games — big energy in one day.' },
+                        'daily-sports': { Icon: Clock, title: 'Daily Sports', desc: 'Drop-ins and pickups you can join on your schedule — no season-long commitment.' },
+                        'events': { Icon: Sparkles, title: 'Events', desc: 'Happy hours and social events — come for the vibes, stay for the people.' },
+                        'private-rentals': { Icon: BadgeDollarSign, title: 'Private Rentals', desc: 'Reserve space for your crew — a private way to play.' },
+                        'volunteering': { Icon: Users, title: 'Volunteering', desc: 'Give back and meet great people — volunteer opportunities around the community.' },
+                        'classes': { Icon: Users, title: 'Classes', desc: 'Skill-building sessions and clinics — learn, improve, and have fun.' }
+                    };
+                    const entry = meta[type] || meta['leagues'];
+                    const Icon = entry.Icon;
+                    return (
+                        <div className="pb-4">
+                            <div className="w-full flex items-center justify-between py-2">
+                                <div className="flex items-center gap-2">
+                                    <Icon className="h-5 w-5 text-[#222222]" />
+                                    <h4 className="font-semibold text-lg">{entry.title}</h4>
+                                </div>
+                            </div>
+                            <div className="text-sm text-gray-700 leading-relaxed">{entry.desc}</div>
                         </div>
-                    </div>
-                    <div className="text-sm text-gray-700 leading-relaxed">
-                        Weekly games and playoffs. Sign up solo, with friends, or a full team — we guarantee a game every week.
-                    </div>
-                </div>
+                    );
+                })()}
 
                 {/* Schedule */}
                 <div className="py-2">

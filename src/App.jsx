@@ -8,6 +8,11 @@ function App() {
     const [variant, setVariant] = useState('A');
 
     const [filters, setFilters] = useState({
+        // NOTE: keep existing Variant B filtering behavior intact.
+        // We only add an `activityType` field so the Type of Activity control
+        // (Leagues / Tournaments / Daily Sports / Events / Private Rentals / Volunteering / Classes)
+        // can route results to the right dataset.
+        activityType: 'leagues',
         days: [],
         priceType: 'member', // default per UI? or all?
         priceDeals: [],

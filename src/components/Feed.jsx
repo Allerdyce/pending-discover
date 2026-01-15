@@ -9,14 +9,57 @@ const Feed = ({ filters }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [leaguesRes, eventsRes] = await Promise.all([
+                const [leaguesRes, eventsRes, tournamentsRes, dailyRes, rentalsRes, volunteerRes, classesRes] = await Promise.all([
                     fetch('/data/leagues.json'),
-                    fetch('/data/events.json')
+                    fetch('/data/events.json'),
+                    fetch('/data/tournaments.json'),
+                    fetch('/data/daily-sports.json'),
+                    fetch('/data/rentals.json'),
+                    fetch('/data/volunteer.json'),
+                    fetch('/data/classes.json')
                 ]);
 
                 const leagues = await leaguesRes.json();
                 const events = await eventsRes.json();
-                const combined = [...(leagues.records || []), ...(events.records || [])];
+                const tournaments = await tournamentsRes.json();
+                const daily = await dailyRes.json();
+                const rentals = await rentalsRes.json();
+                const volunteer = await volunteerRes.json();
+                const classes = await classesRes.json();
+
+                // Tag each record with a stable `__type` so we can filter by
+                // the Type of Activity dropdown without changing existing filter logic.
+                const tag = (arr, type) => (arr || []).map(r => ({ ...r, __type: type }));
+
+                const normalizeVolunteer = (payload) => {
+                    // volunteer.json is a single "card" shape, not `{ records: [] }`.
+                    if (!payload) return [];
+                    if (Array.isArray(payload)) return payload;
+                    if (Array.isArray(payload.records)) return payload.records;
+                    if (payload.card) return [payload.card];
+                    return [];
+                };
+
+                const normalizeClasses = (payload) => {
+                    // classes.json is `{ sections: [{ events: [...] }] }`.
+                    if (!payload) return [];
+                    if (Array.isArray(payload)) return payload;
+                    if (Array.isArray(payload.records)) return payload.records;
+                    if (Array.isArray(payload.sections)) {
+                        return payload.sections.flatMap(s => Array.isArray(s.events) ? s.events : []);
+                    }
+                    return [];
+                };
+
+                const combined = [
+                    ...tag(leagues.records || [], 'leagues'),
+                    ...tag(events.records || [], 'events'),
+                    ...tag(tournaments.records || [], 'tournaments'),
+                    ...tag(daily.records || [], 'daily-sports'),
+                    ...tag(rentals.records || [], 'private-rentals'),
+                    ...tag(normalizeVolunteer(volunteer), 'volunteering'),
+                    ...tag(normalizeClasses(classes), 'classes')
+                ];
                 setAllActivities(combined);
             } catch (err) {
                 console.error("Failed to load activities", err);
@@ -31,6 +74,13 @@ const Feed = ({ filters }) => {
     // Filter Logic
     const filteredActivities = allActivities.filter(activity => {
         if (!filters) return true;
+
+        // 0. Type of Activity
+        // Default to leagues to preserve current behavior.
+        const selectedType = (filters.activityType || 'leagues').toLowerCase();
+        if (selectedType && activity.__type) {
+            if (activity.__type !== selectedType) return false;
+        }
 
         // 1. Days Filter
         if (filters.days && filters.days.length > 0) {

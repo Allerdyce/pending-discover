@@ -1118,6 +1118,12 @@
                 padding-bottom: 0.5rem; /* match the previous pb-2 so height stays constant */
               }
 
+              /* Active macro tab = underline + bold */
+              #hero-variant-b .macro-tab-btn.is-active {
+                border-bottom-color: #0034DD;
+                font-weight: 700;
+              }
+
               /* On tablet+ widths: hide Filters pill (sidebar is already visible) */
               @media (min-width: 768px) {
                 #hero-variant-b #pill-filters {
@@ -12197,9 +12203,9 @@
         macroTabs.forEach(t => {
           const b = document.getElementById(t.id);
           if (!b) return;
-          b.classList.remove("border-[#0034DD]", "font-bold");
+          b.classList.remove('is-active');
         });
-        e.currentTarget.classList.add("border-[#0034DD]", "font-bold");
+        e.currentTarget.classList.add('is-active');
 
         // Logic: Update Hidden Input
         if (hiddenActivityInput) {
@@ -12221,6 +12227,12 @@
         }
       });
     });
+
+    // Ensure the default tab gets the bold + underline styling on first load.
+    try {
+      const defaultTabEl = document.getElementById('tab-sports');
+      if (defaultTabEl) defaultTabEl.classList.add('is-active');
+    } catch (_) { /* no-op */ }
 
     // Set "Sports" as visually active by default (handled in HTML now, but keeping for safety)
     const defaultTab = document.getElementById("tab-sports");
