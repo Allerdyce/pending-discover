@@ -6613,6 +6613,8 @@
         actVal === "rentals" ||
         actVal === "rental";
       const isLeagues = actVal === "leagues" || actVal === "league";
+      const isVolunteering = actVal === "volunteering" || actVal === "volunteer";
+      const isClasses = actVal === "classes" || actVal === "class";
       const enteringLeagues =
         isLeagues && __lastActivitiesScope !== "leagues";
       // Update explainer header/body and daily-type controls
@@ -6888,6 +6890,35 @@
               if (summary) summary.textContent = "Any — Any";
             }
           }
+        } else if (isVolunteering) {
+          titleEl.textContent = "Volunteering";
+          bodyEl.textContent =
+            "Give back, meet people, and get involved with the community.";
+          iconEl.setAttribute("data-lucide", "heart");
+          iconEl.classList.remove(
+            "text-orange-600",
+            "text-yellow-600",
+            "text-purple-600",
+            "text-[rgb(34,34,34)]"
+          );
+          iconEl.classList.add("text-red-600");
+          dailyTypeWrap.classList.add("hidden");
+          dailyTypeWrap.setAttribute("aria-hidden", "true");
+        } else if (isClasses) {
+          titleEl.textContent = "Classes";
+          bodyEl.textContent =
+            "Drop into fitness and skill-building classes around the city.";
+          iconEl.setAttribute("data-lucide", "dumbbell");
+          iconEl.classList.remove(
+            "text-orange-600",
+            "text-yellow-600",
+            "text-purple-600",
+            "text-[rgb(34,34,34)]",
+            "text-red-600"
+          );
+          iconEl.classList.add("text-cyan-600");
+          dailyTypeWrap.classList.add("hidden");
+          dailyTypeWrap.setAttribute("aria-hidden", "true");
         } else {
           titleEl.textContent = "Leagues";
           bodyEl.textContent =
