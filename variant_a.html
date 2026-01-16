@@ -4322,7 +4322,12 @@
           slides.push(buildVideoSlide("utMEhvPfU-k"));
         }
         // Always provide a safe, non-empty image URL.
-        const heroUrl = activity.image_url || activity.img || getTypePlaceholderForActivity(activity);
+        const heroUrl =
+          activity.image_url ||
+          activity.img ||
+          (activity.images && activity.images.coverImage && activity.images.coverImage.imgSrc) ||
+          (activity.images && activity.images.programImage && activity.images.programImage.imgSrc) ||
+          getTypePlaceholderForActivity(activity);
         slides.push(buildImageSlide(heroUrl, alt));
         // Always include a second slide so hover can reveal it
         // slides.push(buildPlaceholderSlide("2nd image")); // Removed hover state
@@ -10201,16 +10206,33 @@
         if (volunteerRes.status === "fulfilled" && volunteerRes.value.ok) {
           const text = await volunteerRes.value.text();
           const data = __robustParseJSON(text);
-          const list = __extractList(data);
-          if (Array.isArray(list) && list.length) {
-            // If __extractList found something iterable, transform it
-            volunteer = list
-              .map(transformVolunteerToActivity)
-              .filter(Boolean);
-          } else if (data && data.card) {
-            // Most common: single card
+          // Prefer the known shape first to avoid accidentally grabbing unrelated arrays
+          if (data && data.card) {
             const v = transformVolunteerToActivity(data.card);
             volunteer = v ? [v] : [];
+          } else if (Array.isArray(data)) {
+            // Only accept array items that look like real cards
+            const valid = data.filter(
+              (item) =>
+                item &&
+                (item.title || item.program_name || item.name || item.time)
+            );
+            volunteer = valid
+              .map(transformVolunteerToActivity)
+              .filter(Boolean);
+          } else {
+            // Fallback to generic extraction only if it finds card-like objects
+            const list = __extractList(data);
+            if (Array.isArray(list) && list.length) {
+              const valid = list.filter(
+                (item) =>
+                  item &&
+                  (item.title || item.program_name || item.name || item.time)
+              );
+              volunteer = valid
+                .map(transformVolunteerToActivity)
+                .filter(Boolean);
+            }
           }
           DATASETS.volunteer = volunteer.slice();
         } else {
@@ -10230,16 +10252,32 @@
         if (classesRes.status === "fulfilled" && classesRes.value.ok) {
           const text = await classesRes.value.text();
           const data = __robustParseJSON(text);
-          const list = __extractList(data);
-          if (Array.isArray(list) && list.length) {
-            classes = list.map(transformClassToActivity).filter(Boolean);
-          } else if (data && Array.isArray(data.sections)) {
+          if (data && Array.isArray(data.sections)) {
             const eventsFlat = data.sections.flatMap((s) =>
               Array.isArray(s && s.events) ? s.events : []
             );
             classes = eventsFlat
               .map(transformClassToActivity)
               .filter(Boolean);
+          } else if (Array.isArray(data)) {
+            // Only accept array items that look like class events
+            const valid = data.filter(
+              (item) =>
+                item &&
+                (item.title || item.program_name || item.name || item.startTime)
+            );
+            classes = valid.map(transformClassToActivity).filter(Boolean);
+          } else {
+            // Fallback to generic extraction only if it finds event-like objects
+            const list = __extractList(data);
+            if (Array.isArray(list) && list.length) {
+              const valid = list.filter(
+                (item) =>
+                  item &&
+                  (item.title || item.program_name || item.name || item.startTime)
+              );
+              classes = valid.map(transformClassToActivity).filter(Boolean);
+            }
           }
           DATASETS.classes = classes.slice();
         } else {
@@ -10414,7 +10452,9 @@
 
     function fixImageUrl(url) {
       if (!url || typeof url !== "string") return url;
-      const u = url.trim();
+      let u = url.trim();
+      // Some upstream feeds emit broken scheme like "https:/"; normalize to "https://"
+      u = u.replace(/^https:\/([^/])/i, "https://$1");
       // If this is a local/relative asset (e.g., missingimage.avif), do not rewrite
       // We only normalize extensions for remote URLs.
       const isRemote = /^(https?:)?\/\//i.test(u);
