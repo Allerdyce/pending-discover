@@ -7864,8 +7864,11 @@
       // Strong source-based typing first
       if (activity && activity.source === "leagues") return "League";
       if (activity && activity.source === "rentals") return "Private Rentals";
-      if (activity && activity.source === "volunteer") return "Volunteering";
-      if (activity && activity.source === "classes") return "Classes";
+      // For filtering/rendering we normalize these to existing types:
+      // - volunteering cards are rendered as Events
+      // - classes cards are rendered as Drop-ins
+      if (activity && activity.source === "volunteer") return "Event";
+      if (activity && activity.source === "classes") return "Drop-in";
       if (canon === "league" || canon === "leagues") return "League";
       if (canon === "drop-in" || canon === "dropin" || canon === "drop in")
         return "Drop-in";
@@ -7887,8 +7890,8 @@
         canon === "private rentals"
       )
         return "Private Rentals";
-      if (canon === "volunteering" || canon === "volunteer") return "Volunteering";
-      if (canon === "classes" || canon === "class") return "Classes";
+      if (canon === "volunteering" || canon === "volunteer") return "Event";
+      if (canon === "classes" || canon === "class") return "Drop-in";
       // Fallbacks by source to ensure robust typing when raw type missing
       if (activity && activity.source === "events") return "Event";
       if (activity && activity.source === "tournaments") return "Tournament";
