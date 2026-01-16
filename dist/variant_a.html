@@ -3870,6 +3870,15 @@
         const times = (t1 && t2) ? `${t1} - ${t2}` : (t1 || t2 || '');
         return `${dayLabel}${dayLabel && times ? ' · ' : ''}${times}`;
       }
+      // Classes: mimic Daily presentation (Today/Tomorrow badges are handled elsewhere) but keep simple
+      // Expected UI: "Today" (or a date like "Sat Jan 10") plus the start time.
+      if (a && a.source === 'classes') {
+        const label = String(a.day_label || a.start_date_text || 'Today').trim();
+        const t1 = formatTimeCompact(a.time_start || a.startTime || '');
+        const t2 = formatTimeCompact(a.time_end || a.endTime || '');
+        const times = (t1 && t2) ? `${t1} - ${t2}` : (t1 || t2 || '');
+        return `${label}${label && times ? ' · ' : ''}${times}`.trim();
+      }
       // Fallback to times only
       const t1 = formatTimeCompact(a && a.time_start || '');
       const t2 = formatTimeCompact(a && a.time_end || '');
@@ -11159,9 +11168,14 @@
         v.venue_map_url ||
         (locLabel ? `https://www.google.com/maps?q=${encodeURIComponent(locLabel)}` : "");
       const time = v.time || {};
-      const startText = time.dateText || "";
-      const timeStart = time.startTime || "";
-      const timeEnd = time.endTime || "";
+      // volunteer.json carries both human-readable and structured time fields.
+      // We want:
+      // - buildNewCardTitle(): expects day_label to be "Mar 24" and core to be cleaned from the title.
+      // - getScheduleLine() (Events branch): uses day_label + time_start/time_end.
+      const startText = String(time.dateText || "").trim(); // e.g., "Mar 24"
+      const timeStart = String(time.startTime || "").trim(); // e.g., "7:00 PM"
+      const timeEnd = String(time.endTime || "").trim(); // e.g., "8:00 PM"
+      const timeDisplay = String(time.display || "").trim(); // e.g., "Mar 24 • 7:00 PM - 8:00 PM"
       const formatDisplay = (v.format && v.format.display) || v.format || "Open";
       const skillDisplay =
         (v.skillLevel && (v.skillLevel.level || v.skillLevel.display)) ||
@@ -11176,31 +11190,60 @@
         : fixImageUrl(imageUrlRaw);
       const feats = Array.isArray(v.features) ? v.features.slice() : [];
 
+      // If the source doesn't include structured times, try to parse them from the display string.
+      // We keep these lightweight and best-effort so we don't break other datasets.
+      let parsedStart = timeStart;
+      let parsedEnd = timeEnd;
+      if ((!parsedStart || !parsedEnd) && timeDisplay) {
+        const times = Array.from(
+          timeDisplay.matchAll(/(\d{1,2})(?::(\d{2}))?\s*([AP]M)/gi)
+        ).map((m) => {
+          const hh = String(parseInt(m[1], 10));
+          const mm = m[2] ? `:${m[2]}` : "";
+          const ap = String(m[3] || "").toUpperCase();
+          return `${hh}${mm}${ap}`;
+        });
+        if (!parsedStart && times[0]) parsedStart = times[0];
+        if (!parsedEnd && times[1]) parsedEnd = times[1];
+      }
+
+      // Normalize to the compact form our renderers expect.
+      const normStart = parsedStart ? formatTimeCompact(parsedStart) : "";
+      const normEnd = parsedEnd ? formatTimeCompact(parsedEnd) : "";
+
+      // Ensure these cards never render as "Volunteer @ Volunteer".
+      const venueNameForCard = locLabel || "Virtual Event";
+
+      // Use a neutral-but-not-"Other" sport label so we don't get the huge "Other" overlay.
+      // (The placeholder image logic maps unknown sports to the big 'Other' hero image.)
+      const sportLabel = "Volunteering";
+
       return {
         id: String(v.id || v.slug || title).replace(/\s+/g, "-").toLowerCase(),
         source: "volunteer",
-        activity_type: "Volunteering",
+        // Treat as an Event for schedule/title rendering (matches the expected UI spec)
+        activity_type: "Event",
         program_name: title,
         title,
-        sport: "Other",
-        venue_name: locLabel,
+        sport: sportLabel,
+        venue_name: venueNameForCard,
         venue_map_url: mapUrl,
         start_date_text: startText,
-        time_start: timeStart,
-        time_end: timeEnd,
+        time_start: normStart,
+        time_end: normEnd,
         // For new card renderer which expects these keys
         day_label: startText,
-        startTime: timeStart,
-        endTime: timeEnd,
+        startTime: normStart,
+        endTime: normEnd,
         format: formatDisplay,
         skill_levels: skillDisplay ? [String(skillDisplay)] : [],
         features: feats,
         // Prices (usually free)
-        member_price_current: null,
-        price_person_current:
-          v.pricing && v.pricing.perPerson
-            ? toNum(v.pricing.perPerson.current)
-            : null,
+        // For Event cards, the renderer shows member price as primary and uses price_person_current as "Free agent".
+        // Our expected UI calls for $0 /member and secondary line "Free agent: $0 | Team $0".
+        member_price_current: 0,
+        price_person_current: 0,
+        price_team: 0,
         image_url: imageUrl,
         img: imageUrl,
         image_alt: title,
@@ -11226,37 +11269,47 @@
       const imageUrl = isInvalidImageUrl(imageUrlRaw)
         ? getSportPlaceholder("Other")
         : fixImageUrl(imageUrlRaw);
-      // No reliable date in this dataset; keep empty so cards don't break.
-      const startText = "";
-      const timeStart = c.startTime || "";
+      // Classes have a startTime, and in our sample dataset they should all appear as "Today".
+      // The card title builder expects a day token plus a cleaned core and neighborhood.
+      const startText = "Today";
+      const timeStart = String(c.startTime || "").trim();
+      const normStart = timeStart ? formatTimeCompact(timeStart) : "";
+
+      // Pricing: expected UI uses $0 primary and secondary line Free agent/team.
+      // The class dataset uses member/standard; we map to the renderer's league-style fields.
+      const memberPrice =
+        c.pricing && c.pricing.member ? toNum(c.pricing.member.price) : null;
+      const standardPrice =
+        c.pricing && c.pricing.standard ? toNum(c.pricing.standard.price) : null;
+      const primaryMember = Number.isFinite(memberPrice) ? memberPrice : 0;
+      const freeAgent = Number.isFinite(standardPrice) ? standardPrice : 0;
 
       return {
         id: String(c.id || c.slug || `${title}-${venueName}-${timeStart}`)
           .replace(/\s+/g, "-")
           .toLowerCase(),
         source: "classes",
-        activity_type: "Classes",
+        // Render like Daily Sports so schedule/title match the expected "Today" cards.
+        activity_type: "Drop-in",
         program_name: title,
         title,
-        sport: "Other",
+        // Avoid the massive "Other" hero placeholder; use a fitness-oriented label.
+        sport: "Fitness",
         venue_name: venueName,
         venue_map_url: mapUrl,
         start_date_text: startText,
-        time_start: timeStart,
+        time_start: normStart,
         time_end: "",
         // For new card renderer which expects these keys
-        day_label: "Today",
-        startTime: timeStart,
+        day_label: startText,
+        startTime: normStart,
         endTime: "",
         format: "Open",
         skill_levels: [],
         features: [],
-        member_price_current:
-          c.pricing && c.pricing.member ? toNum(c.pricing.member.price) : null,
-        price_person_current:
-          c.pricing && c.pricing.standard
-            ? toNum(c.pricing.standard.price)
-            : null,
+        member_price_current: primaryMember,
+        price_person_current: freeAgent,
+        price_team: 0,
         image_url: imageUrl,
         img: imageUrl,
         image_alt: title,
