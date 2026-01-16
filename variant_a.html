@@ -4321,7 +4321,9 @@
         if (hasGlowKickballVideo(activity)) {
           slides.push(buildVideoSlide("utMEhvPfU-k"));
         }
-        slides.push(buildImageSlide(activity.image_url || activity.img, alt));
+        // Always provide a safe, non-empty image URL.
+        const heroUrl = activity.image_url || activity.img || getTypePlaceholderForActivity(activity);
+        slides.push(buildImageSlide(heroUrl, alt));
         // Always include a second slide so hover can reveal it
         // slides.push(buildPlaceholderSlide("2nd image")); // Removed hover state
         const carouselHtml = buildCarouselHtml(slides, true);
@@ -5525,8 +5527,11 @@
           // Events and Private Rentals included for future data; may yield 0 with current dataset
           events: ["Event", "Watch Party", "Player Party", "Happy Hour"],
           "private rentals": ["Private Rentals", "Rental"],
-          volunteering: ["Volunteering"],
-          classes: ["Classes"],
+          // Note: volunteering/classes are normalized to render like existing card types
+          // - volunteering -> Event
+          // - classes -> Drop-in
+          volunteering: ["Event"],
+          classes: ["Drop-in"],
         };
         return map[key] || [];
       }
@@ -10439,6 +10444,17 @@
       return `https://placehold.co/800x450/0034DD/ffffff?text=${encodeURIComponent(
         label
       )}`;
+    }
+
+    // For classes/volunteering we always want a non-generic hero.
+    // If the payload doesn't provide an image, fall back to a type-specific placeholder.
+    function getTypePlaceholderForActivity(a) {
+      try {
+        const src = String(a && a.source || '').toLowerCase();
+        if (src === 'classes') return getSportPlaceholder('Fitness');
+        if (src === 'volunteer') return getSportPlaceholder('Volunteering');
+      } catch (_) { }
+      return getSportPlaceholder(a && a.sport ? a.sport : 'Sport');
     }
     // --- DATASET DATE SHIFTING ---
     // Parse a MM/DD from a string (supports "M/D" and month names like "Sep 5" or "September 5")
